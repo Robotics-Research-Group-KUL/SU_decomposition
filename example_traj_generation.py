@@ -69,6 +69,9 @@ U = numpy.zeros((6,3,N-3))
 # Calculate body twist trajectory
 twist = src.robotics.calculate_bodytwist_from_poses(T,ds)
 
+total_displacement_twist_in_body = numpy.zeros(6)
+total_displacement_twist_in_mf = numpy.zeros((6,N-1))
+
 # Perform the successive SU decompositions along the trajectory
 for k in range(N-3): 
 
@@ -76,11 +79,33 @@ for k in range(N-3):
     Xi_ = numpy.column_stack([twist[:,k], twist[:,k+1], twist[:,k+2]])
 
     # Compute U matrix with regularization
-    U_, _, _ = src.SU_decomp.SU(Xi_, L = 0.3)
+    U_, R, p = src.SU_decomp.SU(Xi_, L = 0.3)
+
+    # Test
+    total_displacement_twist_matrix = src.robotics.logm_pose(src.robotics.inverse_T(T[:,:,k])@T[:,:,-1])/ds
+
+    skew_omega = total_displacement_twist_matrix[:3, :3]
+    total_displacement_twist_in_body[:3] = src.robotics.extract_vector_from_skew(skew_omega)
+    total_displacement_twist_in_body[3:6] = total_displacement_twist_matrix[:3, 3]
+
+    total_displacement_twist_in_mf[:3,k] = R.T @ total_displacement_twist_in_body[:3]
+    total_displacement_twist_in_mf[3:6,k] = R.T @ total_displacement_twist_in_body[3:6] + R.T @ (numpy.cross(total_displacement_twist_in_body[:3],p))
 
     # Store the results
     Xi[:,:,k] = Xi_
     U[:,:,k] = U_
+
+
+# Test
+for k in range(2):
+    total_displacement_twist_matrix = src.robotics.logm_pose(src.robotics.inverse_T(T[:,:,N-3+k])@T[:,:,-1])/ds
+
+    skew_omega = total_displacement_twist_matrix[:3, :3]
+    total_displacement_twist_in_body[:3] = src.robotics.extract_vector_from_skew(skew_omega)
+    total_displacement_twist_in_body[3:6] = total_displacement_twist_matrix[:3, 3]
+
+    total_displacement_twist_in_mf[:3,N-3+k] = R.T @ total_displacement_twist_in_body[:3]
+    total_displacement_twist_in_mf[3:6,N-3+k] = R.T @ total_displacement_twist_in_body[3:6] + R.T @ (numpy.cross(total_displacement_twist_in_body[:3],p))
 
 
 ############ Plot the results ########## 
@@ -110,7 +135,7 @@ for k in range(N-3):
     # Reconstruct moving frame
     _, R, p = src.SU_decomp.SU(Xi_rec[:,:,k], L = 0.3)
     
-    # Reconstruct twist
+    # Reconstruct local twist
     twist_[0:3] = R @ U[0:3,2,k]
     twist_[3:6] = R @ U[3:6,2,k] - numpy.cross(twist_[0:3], p)
     twist_rec[:,2+k] = twist_
@@ -130,6 +155,8 @@ MS_reconstruction_error = 0.
 for k in range(N):
     error = numpy.sum((T_rec-T)**2)
     MS_reconstruction_error += error
+
+
 
 # Plot the reconstructed rigid-body trajectory
 fig = plt.figure(figsize=(9, 9))
@@ -164,6 +191,10 @@ for Q in range(nb_targets):
     T_gen[:,:,0:3] = T_rec[:,:,0:3]
     twist_gen = twist_rec
     twist_gen_matrix = numpy.zeros((4,4))
+
+    # TEST
+    total_displacement_twist_in_mf[:,2]
+    
 
     for k in range(N-3):
         
