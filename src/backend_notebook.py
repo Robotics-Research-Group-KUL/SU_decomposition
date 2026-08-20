@@ -1,10 +1,10 @@
 import scipy, numpy, src.data_handling, src.robotics, src.SU_decomp, src.plotting
+import matplotlib.pyplot as plt
 
 def load_trajectory(input_trajectory,path_to_data):
 
-    # Load the data
-    T_raw, dt = src.data_handling.load_demo_trajectory(input_trajectory,path_to_data)
-    N = T_raw.shape[2]
+    # Load the trajectory data
+    T_raw, N, dt, time_total = src.data_handling.load_demo_trajectory_motion(input_trajectory,path_to_data)
 
     # Subsample raw trajectory data
     T_sub = T_raw[:,:,0:N:3]
@@ -42,12 +42,38 @@ def compute_SU(T,dt,L):
 
     return U
 
-def plot_trajectory(T,input_trajectory,path_to_data,path_to_figures):
-    src.plotting.plot_trajectories(T, [T], input_trajectory, path_to_data, path_to_figures)
+def plot_rigid_body_trajectory(T,input_trajectory,path_to_data,path_to_figures):
+
+    # Load the data of the rigid body
+    if input_trajectory == 'pouring':
+        object_data = src.data_handling.load_data_kettle(path_to_data)
+        T_kettle_wrt_tracker = src.data_handling.load_tracker_kettle_calibration_data()
+        nb_vertices = object_data['vertices'].shape[0]
+        hom_vertices = numpy.column_stack([object_data['vertices'],numpy.ones(nb_vertices)])
+        calibrated_vertices = T_kettle_wrt_tracker @ hom_vertices.T
+        object_data['vertices'] = calibrated_vertices[:3,:].T
+    else:
+        object_data = src.data_handling.create_cube_data()
+
+    fig = plt.figure(figsize=(9, 9))
+    ax = fig.add_subplot(111, projection='3d')
+    key_values_body_frame, key_values_rigid_object = [0,-1], [0,-1]
+    ax = src.plotting.plot_trajectory_origin(ax, T, color = 'b', linewidth = 3.)
+    ax = src.plotting.plot_frames(ax, T, key_values_body_frame , color = 'b', linewidth = 3., arrow_len = 0.08)
+    ax = src.plotting.plot_rigid_bodies(ax, T, key_values_rigid_object, object_data)
+    ax = src.plotting.ax_settings_general(ax)
+    if input_trajectory == 'pouring':
+        ax = src.plotting.ax_settings_pouring_trajectory(ax)
+    fig.savefig(rf"{path_to_figures}/input_trajectory.svg")
 
 def plot_U(U,dt,input_trajectory,path_to_figures):
-    N = U[0].shape[2]
-    time_total = round((N-1)*dt,1)
-    src.plotting.plot_U(U, time_total, 'U.svg', input_trajectory, path_to_figures)
+
+    fig, axes = src.plotting.initialize_plot_U('time', input_trajectory)
+    linewidths = [3.0,1.5]
+    colors = ['b','r']
+    for j in range(2):
+        axes = src.plotting.plot_U(axes, U[j], 5.6, color = colors[j], linewidth = linewidths[j])
+    fig.savefig(rf"{path_to_figures}/U.svg")
+
 
 

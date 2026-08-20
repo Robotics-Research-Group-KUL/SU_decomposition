@@ -3,7 +3,7 @@ import scipy, numpy, src.data_handling, src.robotics, src.SU_decomp, src.plottin
 import matplotlib.pyplot as plt
 
 ############ Input ##########
-input_trajectory = 'peg_on_hole_alignment' 
+input_trajectory = 'contour_following' 
 # options: 'helical_translation', 'axis_rotation', 'precession', 'pouring', 'contour_following',
 #          'peg_on_hole_alignment'
 progress_domain = 'geometric'
@@ -22,7 +22,7 @@ if progress_domain == 'time':
     N = T.shape[2]
 elif progress_domain == 'geometric':
     # Interpolate pose data to equidistant geometric progress steps
-    s = src.robotics.calculate_geom_progress_axis(T_raw,dt, L=0.3)
+    s = src.robotics.calculate_geom_progress_axis(T_raw, dt, L=0.3)
     ds = 0.02 # -> 2 cm
     N = src.data_handling.calculate_number_of_equidistant_steps_in_array(s, stepsize = ds)
     s_equidistant = src.data_handling.make_array_equidistant(s, N)

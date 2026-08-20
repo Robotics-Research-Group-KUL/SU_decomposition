@@ -99,7 +99,7 @@ fig.savefig(rf"{path_to_figures}/U_reg.svg")
 ##################### Trajectory generalization ####################################################
 T_target = numpy.array([[0., 0., -1., -0.5],[1., 0., 0., 2.2],[0., -1., 0., -2.], [0.,  0.,  0.,  1.]])
 
-nb_targets = 3
+nb_targets = 1
 generated_trajectories = numpy.zeros((nb_targets,4,4,N))
 T_gen_all = numpy.zeros(())
 for Q in range(nb_targets):
@@ -114,7 +114,7 @@ for Q in range(nb_targets):
     average_shape_diff_min = 10**10
     average_shape_diff_prev = 10**10
 
-    for test in range(1):
+    for test in range(100):
 
         # Initialization
         T_rec = numpy.zeros((4,4,N))
@@ -173,6 +173,8 @@ for Q in range(nb_targets):
             Xi_corrected[:,2] = corrected_bodytwist[:,0]
             U_corrected, _, _ = src.SU_decomp.SU(Xi_corrected, L = L)
 
+            # Xi_rec[:,:,k] = Xi_corrected*1.
+
             shape_diff[k] = numpy.sqrt(L*2*numpy.sum((U_corrected[:3,:]-U[:3,:,k])**2) + numpy.sum((U_corrected[3:6,:]-U[3:6,:,k])**2))/3.
 
             if k < N-4:
@@ -182,10 +184,10 @@ for Q in range(nb_targets):
                 
         generated_trajectories[Q,:,:,:] = T_rec
         error_target = numpy.sum((T_rec[:,:,-1]-T_target)**2)
-        print(error_target)
+        # print(error_target)
 
         average_shape_diff = numpy.mean(shape_diff)
-        # print(average_shape_diff)
+        print(average_shape_diff)
         # print(average_shape_diff < average_shape_diff_prev)
 
         if (average_shape_diff < average_shape_diff_min):
