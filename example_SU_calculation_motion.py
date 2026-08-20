@@ -1,6 +1,12 @@
 # Import necessary libraries
-import scipy, numpy, src.data_handling, src.robotics, src.SU_decomp, src.plotting
 import matplotlib.pyplot as plt
+import numpy
+import scipy
+
+import src.data_handling
+import src.plotting
+import src.robotics
+import src.su_decomp
 
 ############ Input ##########
 input_trajectory = 'contour_following' 
@@ -14,7 +20,7 @@ path_to_data = 'Data'
 path_to_figures = 'figures'
 
 # Load the trajectory data
-T_raw, N, dt, time_total = src.data_handling.load_demo_trajectory_motion(input_trajectory,path_to_data)
+T_raw, N, dt = src.data_handling.load_demo_trajectory_motion(input_trajectory,path_to_data)
 
 if progress_domain == 'time':
     # Subsample raw trajectory data
@@ -27,8 +33,9 @@ elif progress_domain == 'geometric':
     N = src.data_handling.calculate_number_of_equidistant_steps_in_array(s, stepsize = ds)
     s_equidistant = src.data_handling.make_array_equidistant(s, N)
     T = src.robotics.interpT(s, T_raw, s_equidistant)
-    
 
+progress_total = (N-1)*ds
+    
 # Load the data of the rigid body
 if input_trajectory == 'pouring':
     object_data = src.data_handling.load_data_kettle(path_to_data)
@@ -110,10 +117,10 @@ for j in range(nb_body_frame_transformations):
         Xi_ = numpy.column_stack([twist_smooth[:,k], twist_smooth[:,k+1], twist_smooth[:,k+2]])
 
         # Compute U matrix without regularization
-        U_, _, _ = src.SU_decomp.SU(Xi_)
+        U_, _, _ = src.su_decomp.SU(Xi_)
 
         # Compute U matrix with regularization
-        U_reg_, _, _ = src.SU_decomp.SU(Xi_, L = 0.3)
+        U_reg_, _, _ = src.su_decomp.SU(Xi_, L = 0.3)
 
         # Store the results
         Xi[j][:,:,k] = Xi_
@@ -124,16 +131,16 @@ for j in range(nb_body_frame_transformations):
 ############ Plot the results ########## 
 fig, axes = src.plotting.initialize_plot_twist_trajectory(progress_domain, input_trajectory)
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_twist_trajectory(axes, Xi[j][:,0,:], time_total, color = colors[j])
+    axes = src.plotting.plot_twist_trajectory(axes, Xi[j][:,0,:], progress_total, color = colors[j])
 fig.savefig(rf"{path_to_figures}/twists.svg")
 
 fig, axes = src.plotting.initialize_plot_U(progress_domain, input_trajectory)
 linewidths = [3.0,1.5]
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_U(axes, U[j], time_total, color = colors[j], linewidth = linewidths[j])
+    axes = src.plotting.plot_U(axes, U[j], progress_total, color = colors[j], linewidth = linewidths[j])
 fig.savefig(rf"{path_to_figures}/U.svg")
 
 fig, axes = src.plotting.initialize_plot_U(progress_domain, input_trajectory)
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_U(axes, U_reg[j], time_total, color = colors[j], linewidth = linewidths[j])
+    axes = src.plotting.plot_U(axes, U_reg[j], progress_total, color = colors[j], linewidth = linewidths[j])
 fig.savefig(rf"{path_to_figures}/U_reg.svg")

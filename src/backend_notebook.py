@@ -1,16 +1,24 @@
-import scipy, numpy, src.data_handling, src.robotics, src.SU_decomp, src.plotting
 import matplotlib.pyplot as plt
+import numpy
+import scipy
+
+import src.data_handling
+import src.plotting
+import src.robotics
+import src.su_decomp
+
 
 def load_trajectory(input_trajectory,path_to_data):
 
     # Load the trajectory data
-    T_raw, N, dt, time_total = src.data_handling.load_demo_trajectory_motion(input_trajectory,path_to_data)
+    T_raw, N, dt = src.data_handling.load_demo_trajectory_motion(input_trajectory,path_to_data)
+    total_time = (N-1)*dt
 
     # Subsample raw trajectory data
     T_sub = T_raw[:,:,0:N:3]
     dt = 3*dt
-
-    return T_sub, dt
+    
+    return T_sub, dt, total_time
 
 def compute_SU(T,dt,L):
 
@@ -31,10 +39,10 @@ def compute_SU(T,dt,L):
         Xi_ = numpy.column_stack([twist_smooth[:,k], twist_smooth[:,k+1], twist_smooth[:,k+2]])
 
         # Compute U matrix without regularization
-        U_, _, _ = src.SU_decomp.SU(Xi_)
+        U_, _, _ = src.su_decomp.SU(Xi_)
 
         # Compute U matrix with regularization
-        U_reg_, _, _ = src.SU_decomp.SU(Xi_, L = L)
+        U_reg_, _, _ = src.su_decomp.SU(Xi_, L = L)
 
         # Store the results
         U[0][:,:,k] = U_reg_
@@ -66,13 +74,13 @@ def plot_rigid_body_trajectory(T,input_trajectory,path_to_data,path_to_figures):
         ax = src.plotting.ax_settings_pouring_trajectory(ax)
     fig.savefig(rf"{path_to_figures}/input_trajectory.svg")
 
-def plot_U(U,dt,input_trajectory,path_to_figures):
+def plot_U(U,total_time,input_trajectory,path_to_figures):
 
     fig, axes = src.plotting.initialize_plot_U('time', input_trajectory)
     linewidths = [3.0, 1.5]
     colors = ['b','r']
     for j in range(2):
-        axes = src.plotting.plot_U(axes, U[j], 5.6, color = colors[j], linewidth = linewidths[j])
+        axes = src.plotting.plot_U(axes, U[j], total_time, color = colors[j], linewidth = linewidths[j])
     fig.savefig(rf"{path_to_figures}/U.svg")
 
 

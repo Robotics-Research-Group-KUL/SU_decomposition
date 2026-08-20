@@ -4,7 +4,9 @@
 import numpy as np
 import pandas as pd
 import scipy
-from src.robotics import quat2pose, interpT, inverse_T
+
+from src.robotics import interpT, inverse_T, quat2pose
+
 
 def load_pose_data_from_csv(csv_file):
     """
@@ -71,11 +73,8 @@ def make_array_equidistant(array, N):
     return array_equidistant
 
 def write_ndarray_to_csv_file(ndarray, file_location):
-    
     df = pd.DataFrame(ndarray)
     df.to_csv(file_location, index = False, header = False, float_format='%.5g', compression='gzip')
-    
-    return
 
 def load_demo_trajectory_motion(input_trajectory,path_to_data):
     if input_trajectory == 'helical_translation':
@@ -91,8 +90,7 @@ def load_demo_trajectory_motion(input_trajectory,path_to_data):
     elif input_trajectory == 'peg_on_hole_alignment':
         T, dt = load_recorded_peg_on_hole_alignment_motion(path_to_data)
     N = T.shape[2]
-    time_total = (N-1)*dt
-    return T, N, dt, time_total
+    return T, N, dt
 
 def load_demo_trajectory_force(input_trajectory,path_to_data):
     if input_trajectory == 'contour_following':
@@ -100,8 +98,7 @@ def load_demo_trajectory_force(input_trajectory,path_to_data):
     if input_trajectory == 'peg_on_hole_alignment':
         T, wrench, dt = load_recorded_peg_on_hole_alignment_force(path_to_data)
     N = T.shape[2]
-    time_total = (N-1)*dt
-    return T, wrench, N, dt, time_total
+    return T, wrench, N, dt
 
 
 def synthetic_helical_translation():

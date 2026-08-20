@@ -1,9 +1,10 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import numpy as np
 from matplotlib.colors import LightSource
-from scipy.spatial.transform import Rotation as R
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
 import src.data_handling
+
 
 def plot_trajectory_origin(ax, T, color = 'b', linewidth = 4.):
     p = T[0:3, 3, :]    

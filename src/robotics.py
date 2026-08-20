@@ -2,6 +2,7 @@ import numpy as np
 from scipy.linalg import expm
 from scipy.spatial.transform import Rotation as R
 
+
 def skew(v):
     """Return the skew-symmetric matrix of a 3-vector."""
     return np.array([
