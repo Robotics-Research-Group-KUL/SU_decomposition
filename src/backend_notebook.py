@@ -69,7 +69,7 @@ def plot_rigid_body_trajectory(T,input_trajectory,path_to_data,path_to_figures):
 def plot_U(U,dt,input_trajectory,path_to_figures):
 
     fig, axes = src.plotting.initialize_plot_U('time', input_trajectory)
-    linewidths = [3.0,1.5]
+    linewidths = [3.0, 1.5]
     colors = ['b','r']
     for j in range(2):
         axes = src.plotting.plot_U(axes, U[j], 5.6, color = colors[j], linewidth = linewidths[j])

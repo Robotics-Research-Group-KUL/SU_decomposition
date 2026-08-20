@@ -223,6 +223,9 @@ def initialize_plot_U(progress_domain = 'time', input_trajectory = 'pouring'):
             else:
                 ax.tick_params(labelbottom=False)
 
+            # set default y-axis limits
+            ax.set_ylim(-0.01, 0.01)
+
             ax.tick_params(labelsize=fontsize_axes)
             axes.append(ax)
             
@@ -290,6 +293,9 @@ def initialize_plot_U_wrench(progress_domain = 'time', input_trajectory = 'pouri
             else:
                 ax.tick_params(labelbottom=False)
 
+            # set default y-axis limits
+            ax.set_ylim(-0.01, 0.01)
+
             ax.tick_params(labelsize=fontsize_axes)
             axes.append(ax)
             
@@ -307,7 +313,23 @@ def plot_U(axes, U, s_max, color = 'b', linewidth = 3.):
         for col_subplot in range(nb_columns):
             
             ax = axes[ax_counter]
+            ymin_prev, ymax_prev = ax.get_ylim()
+
             ax.plot(progress_axis, U[row_subplot,col_subplot,:], color=color, linewidth = linewidth)
+
+            update_limits = False
+            ymin_current = min(U[row_subplot,col_subplot,:])
+            ymax_current = max(U[row_subplot,col_subplot,:])
+            if ymin_current < ymin_prev:
+                update_limits = True
+                ymin_prev = 1.2*ymin_current
+            if ymax_current > ymax_prev:
+                update_limits = True
+                ymax_prev = 1.2*ymax_current
+
+            if update_limits:
+                ax.set_ylim(ymin_prev, ymax_prev)
+
             ax_counter += 1
             
     return axes
