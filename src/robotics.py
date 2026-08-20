@@ -5,36 +5,38 @@ from scipy.spatial.transform import Rotation as R
 
 def skew(v):
     """Return the skew-symmetric matrix of a 3-vector."""
-    return np.array([
-        [0, -v[2], v[1]],
-        [v[2], 0, -v[0]],
-        [-v[1], v[0], 0]
-    ])
+    return np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+
 
 def extract_omega(R1, R2, ds):
     omega_skew = logm_rot(R2 @ R1.T) / ds
     return extract_vector_from_skew(omega_skew)
 
+
 def extract_vector_from_skew(skew_matrix):
     return np.array([skew_matrix[2, 1], skew_matrix[0, 2], skew_matrix[1, 0]])
 
+
 def hamilton_product(q, r):
     if len(q) != 4 or len(r) != 4:
-        raise ValueError('Both inputs must be 4-element vectors.')
-    
+        raise ValueError("Both inputs must be 4-element vectors.")
+
     q0, q1, q2, q3 = q
     r0, r1, r2, r3 = r
-    
-    return np.array([
-        q0 * r0 - q1 * r1 - q2 * r2 - q3 * r3,
-        q0 * r1 + q1 * r0 + q2 * r3 - q3 * r2,
-        q0 * r2 - q1 * r3 + q2 * r0 + q3 * r1,
-        q0 * r3 + q1 * r2 - q2 * r1 + q3 * r0
-    ])
+
+    return np.array(
+        [
+            q0 * r0 - q1 * r1 - q2 * r2 - q3 * r3,
+            q0 * r1 + q1 * r0 + q2 * r3 - q3 * r2,
+            q0 * r2 - q1 * r3 + q2 * r0 + q3 * r1,
+            q0 * r3 + q1 * r2 - q2 * r1 + q3 * r0,
+        ]
+    )
+
 
 def interpT(x, T, xq):
     if xq[0] < x[0] or xq[-1] > x[-1]:
-        raise ValueError('Cannot interpolate beyond first or last sample!')
+        raise ValueError("Cannot interpolate beyond first or last sample!")
 
     M = len(xq)
     T_interpolated = np.zeros((4, 4, M))
@@ -56,15 +58,16 @@ def interpT(x, T, xq):
 
     return T_interpolated
 
+
 def inverse_T(T):
-    
+
     Tinv = np.copy(T)
-    
+
     R = T[0:3, 0:3]
     p = T[0:3, 3]
     p_new = -R.T @ p
     Tinv[0:4, :] = np.vstack((np.hstack((R.T, p_new[:, np.newaxis])), np.array([0, 0, 0, 1])))
-            
+
     return Tinv
 
 
@@ -85,6 +88,7 @@ def logm_pose(T):
 
     return dtwist
 
+
 def logm_rot(R):
     axis_angle = np.array([R[2, 1] - R[1, 2], R[0, 2] - R[2, 0], R[1, 0] - R[0, 1]]) / 2
     sin_angle = np.linalg.norm(axis_angle)
@@ -99,20 +103,24 @@ def logm_rot(R):
 
     return (R - R.T) * alpha
 
+
 def normalize(vector):
     norm_val = np.linalg.norm(vector)
     return vector / norm_val if norm_val != 0 else np.zeros_like(vector)
+
 
 def pose2quat(T):
     ROT = T[0:3, 0:3, :]
     pos = T[0:3, 3, :]
     quat = rot2quat(ROT)
-    return pos, quat.T   # pos is 3xN, quat is 4xN
+    return pos, quat.T  # pos is 3xN, quat is 4xN
+
 
 def quat_conj(q):
     q_new = np.copy(q)
     q_new[1:4] = -q[1:4]
     return q_new
+
 
 def quat2pose(pos, quat):
     N = pos.shape[1]
@@ -120,11 +128,12 @@ def quat2pose(pos, quat):
 
     for j in range(N):
         # R.from_quat follows the convention of scalar last for quaternions!
-        T[0:3, 0:3, j] = R.from_quat(quat[[1, 2, 3, 0],j]).as_matrix()
+        T[0:3, 0:3, j] = R.from_quat(quat[[1, 2, 3, 0], j]).as_matrix()
         T[0:3, 3, j] = pos[:, j]
         T[3, 3, j] = 1
 
     return T
+
 
 def rot2quat(R_all):
     N = R_all.shape[2]
@@ -141,17 +150,17 @@ def rot2quat(R_all):
             kx1 = R[0, 0] - R[1, 1] - R[2, 2] + 1
             ky1 = R[1, 0] + R[0, 1]
             kz1 = R[2, 0] + R[0, 2]
-            add = (kx >= 0)
-        elif (R[1, 1] >= R[2, 2]):
+            add = kx >= 0
+        elif R[1, 1] >= R[2, 2]:
             kx1 = R[1, 0] + R[0, 1]
             ky1 = R[1, 1] - R[0, 0] - R[2, 2] + 1
             kz1 = R[2, 1] + R[1, 2]
-            add = (ky >= 0)
+            add = ky >= 0
         else:
             kx1 = R[2, 0] + R[0, 2]
             ky1 = R[2, 1] + R[1, 2]
             kz1 = R[2, 2] - R[0, 0] - R[1, 1] + 1
-            add = (kz >= 0)
+            add = kz >= 0
 
         if add:
             kx = kx + kx1
@@ -180,21 +189,22 @@ def rot2quat(R_all):
 
 def calculate_bodytwist_from_poses(T, ds):
     N = T.shape[2]
-    twist = np.zeros((6, N-1))
-    
-    for k in range(N-1):
-        twist_cross = logm_pose(inverse_T(T[:, :, k]) @ T[:, :, k+1]) / ds
+    twist = np.zeros((6, N - 1))
+
+    for k in range(N - 1):
+        twist_cross = logm_pose(inverse_T(T[:, :, k]) @ T[:, :, k + 1]) / ds
         skew_omega = twist_cross[:3, :3]
         twist[:3, k] = extract_vector_from_skew(skew_omega)
         twist[3:6, k] = twist_cross[:3, 3]
 
     return twist
 
+
 def calculate_dtwist_from_poses(T):
     N = T.shape[2]
-    twist = np.zeros((6, N-1))
-    
-    for k in range(N-1):
+    twist = np.zeros((6, N - 1))
+
+    for k in range(N - 1):
         twist_cross = logm_pose(inverse_T(T[:, :, k]) @ T[:, :, -1])
         skew_omega = twist_cross[:3, :3]
         twist[:3, k] = extract_vector_from_skew(skew_omega)
@@ -203,7 +213,7 @@ def calculate_dtwist_from_poses(T):
     return twist
 
 
-def calculate_geom_progress_axis(T,dt,L):
+def calculate_geom_progress_axis(T, dt, L):
     """
     This function calculates the screwbased geometric progress axis for rigid
     body trajectories from input pose data. The twist components are
@@ -218,22 +228,21 @@ def calculate_geom_progress_axis(T,dt,L):
     s = np.zeros(N)
     bodytwists = calculate_bodytwist_from_poses(T, dt)
 
-    for k in range(N-1):
-        omega = bodytwists[0:3,k]
-        vel = bodytwists[3:6,k]
+    for k in range(N - 1):
+        omega = bodytwists[0:3, k]
+        vel = bodytwists[3:6, k]
         if np.linalg.norm(omega) == 0:
             v1 = np.linalg.norm(vel)
         else:
-            p_perp = np.cross(omega,vel)/np.dot(omega,omega)
+            p_perp = np.cross(omega, vel) / np.dot(omega, omega)
             if np.linalg.norm(p_perp) > L:
-                p_regularized = L*p_perp/np.linalg.norm(p_perp)
-                vel_regularized = vel + np.cross(omega,p_regularized)
+                p_regularized = L * p_perp / np.linalg.norm(p_perp)
+                vel_regularized = vel + np.cross(omega, p_regularized)
                 v1 = np.linalg.norm(vel_regularized)
             else:
-                v1 = np.dot(vel,omega)/np.linalg.norm(omega)
-        
-        s_dot = np.sqrt(L**2*np.dot(omega,omega) + v1**2)
-        s[k+1]= s[k] + s_dot*dt
+                v1 = np.dot(vel, omega) / np.linalg.norm(omega)
+
+        s_dot = np.sqrt(L**2 * np.dot(omega, omega) + v1**2)
+        s[k + 1] = s[k] + s_dot * dt
 
     return s
-
