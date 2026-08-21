@@ -1,6 +1,7 @@
 [project]
 name = "my-project"
 version = "0.1.0"
+license-files = ["LICENSE"]
 description = "Python code for SU-decomposition"
 requires-python = ">=3.12"
 
