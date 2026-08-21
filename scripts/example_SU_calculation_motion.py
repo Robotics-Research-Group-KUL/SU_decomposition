@@ -16,7 +16,7 @@ progress_domain = "geometric"
 # options: 'time', 'geometric'
 
 ############ Load and preprocess the trajectory and object data ##########
-path_to_data = "Data"
+path_to_data = "data"
 path_to_figures = "figures"
 
 # Load the trajectory data

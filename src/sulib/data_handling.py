@@ -211,7 +211,7 @@ def synthetic_precession():
 
 def load_recorded_pouring_motion(path_to_data):
 
-    data_file = rf"{path_to_data}/Demos/pouring/Trial1_coffee_kettle_ref_top.csv"
+    data_file = rf"{path_to_data}/demos/pouring/Trial1_coffee_kettle_ref_top.csv"
     T, t = load_pose_data_from_csv(data_file)
     t = remove_offset_array(t)
 
@@ -230,7 +230,7 @@ def load_recorded_pouring_motion(path_to_data):
 
 def load_recorded_contour_following_motion(path_to_data):
 
-    data_file = rf"{path_to_data}/Demos/contour_following/data_demo_a_1.dat"
+    data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     t = remove_offset_array(t)
 
@@ -245,7 +245,7 @@ def load_recorded_contour_following_motion(path_to_data):
 
 def load_recorded_contour_following_force(path_to_data):
 
-    data_file = rf"{path_to_data}/Demos/contour_following/data_demo_a_1.dat"
+    data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     wrench, _ = load_wrench_data_from_dat(data_file)
     t = remove_offset_array(t)
@@ -262,7 +262,7 @@ def load_recorded_contour_following_force(path_to_data):
 
 def load_recorded_peg_on_hole_alignment_motion(path_to_data):
 
-    data_file = rf"{path_to_data}/Demos/peg_on_hole_alignment/data_demo_a_1.dat"
+    data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     t = remove_offset_array(t)
 
@@ -277,7 +277,7 @@ def load_recorded_peg_on_hole_alignment_motion(path_to_data):
 
 def load_recorded_peg_on_hole_alignment_force(path_to_data):
 
-    data_file = rf"{path_to_data}/Demos/peg_on_hole_alignment/data_demo_a_1.dat"
+    data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     wrench, t = load_wrench_data_from_dat(data_file)
     t = remove_offset_array(t)
@@ -377,7 +377,7 @@ def rotate_object_vertices(object, rotation):
 
 
 def load_data_kettle(path_to_data):
-    kettle = load_obj_file(rf"{path_to_data}/Demos/pouring_objects/kettle.obj")
+    kettle = load_obj_file(rf"{path_to_data}/demos/pouring_objects/kettle.obj")
     return kettle
 
 
