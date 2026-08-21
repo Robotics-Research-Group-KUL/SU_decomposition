@@ -32,6 +32,7 @@ jobs:
           pip install -r requirements.txt
           pip install pytest-cov ruff
           pip install -e .
+          pip install nbconvert jupyter
 
       - name: Lint
         run: ruff check .
@@ -45,4 +46,14 @@ jobs:
           for f in scripts/*.py; do
             echo "Running $f"
             python "$f"
+          done
+          
+      - name: Run all notebooks
+        run: |
+          for nb in notebooks/*.ipynb; do
+            echo "Running $nb"
+            jupyter nbconvert \
+              --to notebook \
+              --execute "$nb" \
+              --output /tmp/out.ipynb
           done
