@@ -39,3 +39,10 @@ jobs:
       - name: Run tests with coverage
         run: |
           pytest --cov=sulib --cov-report=xml
+
+      - name: Run all scripts
+        run: |
+          for f in scripts/*.py; do
+            echo "Running $f"
+            python "$f"
+          done
