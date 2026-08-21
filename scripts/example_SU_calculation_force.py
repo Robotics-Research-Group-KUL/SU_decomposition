@@ -2,10 +2,10 @@
 import numpy
 import scipy
 
-import src.data_handling
-import src.plotting
-import src.robotics
-import src.su_decomp
+import sulib.data_handling as dh
+import sulib.plotting as plotting
+import sulib.robotics as rob
+import sulib.su_decomp as su_decomp
 
 ############ Input ##########
 input_trajectory = "peg_on_hole_alignment"
@@ -18,7 +18,7 @@ path_to_data = "Data"
 path_to_figures = "figures"
 
 # Load the trajectory data
-T_raw, wrench_raw, N, dt = src.data_handling.load_demo_trajectory_force(input_trajectory, path_to_data)
+T_raw, wrench_raw, N, dt = dh.load_demo_trajectory_force(input_trajectory, path_to_data)
 
 if progress_domain == "time":
     # Subsample raw trajectory data
@@ -27,11 +27,11 @@ if progress_domain == "time":
     N = T.shape[2]
 elif progress_domain == "geometric":
     # Interpolate pose data to equidistant geometric progress steps
-    s = src.robotics.calculate_geom_progress_axis(T_raw, dt, L=0.3)
+    s = rob.calculate_geom_progress_axis(T_raw, dt, L=0.3)
     ds = 0.02  # -> 2 cm
-    N = src.data_handling.calculate_number_of_equidistant_steps_in_array(s, stepsize=ds)
-    s_equidistant = src.data_handling.make_array_equidistant(s, N)
-    T = src.robotics.interpT(s, T_raw, s_equidistant)
+    N = dh.calculate_number_of_equidistant_steps_in_array(s, stepsize=ds)
+    s_equidistant = dh.make_array_equidistant(s, N)
+    T = rob.interpT(s, T_raw, s_equidistant)
     wrench = numpy.vstack([numpy.interp(s_equidistant, s, wrench_raw[i, :]) for i in range(wrench_raw.shape[0])])
 
 progress_total = (N - 1) * ds
@@ -56,7 +56,7 @@ wrench_var = [numpy.zeros(wrench.shape) for j in range(nb_body_frame_transformat
 # Apply the body frame transformations
 for j in range(nb_body_frame_transformations):
     for k in range(N):
-        T_inv = src.robotics.inverse_T(body_frame_transformations[j])
+        T_inv = rob.inverse_T(body_frame_transformations[j])
         wrench_var[j][:3, k] = T_inv[:3, :3] @ wrench[:3, k]
         wrench_var[j][3:6, k] = T_inv[:3, :3] @ wrench[3:6, k] + numpy.cross(T_inv[:3, 3], wrench_var[j][:3, k])
 
@@ -77,10 +77,10 @@ for j in range(nb_body_frame_transformations):
         Xi_ = numpy.column_stack([wrench_smooth[:, k], wrench_smooth[:, k + 1], wrench_smooth[:, k + 2]])
 
         # Compute U matrix without regularization
-        U_, _, _ = src.su_decomp.SU(Xi_)
+        U_, _, _ = su_decomp.SU(Xi_)
 
         # Compute U matrix with regularization
-        U_reg_, _, _ = src.su_decomp.SU(Xi_, L=0.3)
+        U_reg_, _, _ = su_decomp.SU(Xi_, L=0.3)
 
         # Store the results
         Xi[j][:, :, k] = Xi_
@@ -90,18 +90,18 @@ for j in range(nb_body_frame_transformations):
 
 ############ Plot the results ##########
 colors = ["r", "b"]
-fig, axes = src.plotting.initialize_plot_wrench_trajectory(progress_domain, input_trajectory)
+fig, axes = plotting.initialize_plot_wrench_trajectory(progress_domain, input_trajectory)
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_twist_trajectory(axes, Xi[j][:, 0, :], progress_total, color=colors[j])
+    axes = plotting.plot_twist_trajectory(axes, Xi[j][:, 0, :], progress_total, color=colors[j])
 fig.savefig(rf"{path_to_figures}/wrenches.svg")
 
-fig, axes = src.plotting.initialize_plot_U_wrench(progress_domain, input_trajectory)
+fig, axes = plotting.initialize_plot_U_wrench(progress_domain, input_trajectory)
 linewidths = [3.0, 1.5]
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_U(axes, U[j], progress_total, color=colors[j], linewidth=linewidths[j])
+    axes = plotting.plot_U(axes, U[j], progress_total, color=colors[j], linewidth=linewidths[j])
 fig.savefig(rf"{path_to_figures}/U.svg")
 
-fig, axes = src.plotting.initialize_plot_U(progress_domain, input_trajectory)
+fig, axes = plotting.initialize_plot_U(progress_domain, input_trajectory)
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_U(axes, U_reg[j], progress_total, color=colors[j], linewidth=linewidths[j])
+    axes = plotting.plot_U(axes, U_reg[j], progress_total, color=colors[j], linewidth=linewidths[j])
 fig.savefig(rf"{path_to_figures}/U_reg.svg")

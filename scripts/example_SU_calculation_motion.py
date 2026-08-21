@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import numpy
 import scipy
 
-import src.data_handling
-import src.plotting
-import src.robotics
-import src.su_decomp
+import sulib.data_handling as dh
+import sulib.plotting as plotting
+import sulib.robotics as rob
+import sulib.su_decomp as su_decomp
 
 ############ Input ##########
 input_trajectory = "contour_following"
@@ -20,7 +20,7 @@ path_to_data = "Data"
 path_to_figures = "figures"
 
 # Load the trajectory data
-T_raw, N, dt = src.data_handling.load_demo_trajectory_motion(input_trajectory, path_to_data)
+T_raw, N, dt = dh.load_demo_trajectory_motion(input_trajectory, path_to_data)
 
 if progress_domain == "time":
     # Subsample raw trajectory data
@@ -28,35 +28,35 @@ if progress_domain == "time":
     N = T.shape[2]
 elif progress_domain == "geometric":
     # Interpolate pose data to equidistant geometric progress steps
-    s = src.robotics.calculate_geom_progress_axis(T_raw, dt, L=0.3)
+    s = rob.calculate_geom_progress_axis(T_raw, dt, L=0.3)
     ds = 0.02  # -> 2 cm
-    N = src.data_handling.calculate_number_of_equidistant_steps_in_array(s, stepsize=ds)
-    s_equidistant = src.data_handling.make_array_equidistant(s, N)
-    T = src.robotics.interpT(s, T_raw, s_equidistant)
+    N = dh.calculate_number_of_equidistant_steps_in_array(s, stepsize=ds)
+    s_equidistant = dh.make_array_equidistant(s, N)
+    T = rob.interpT(s, T_raw, s_equidistant)
 
 progress_total = (N - 1) * ds
 
 # Load the data of the rigid body
 if input_trajectory == "pouring":
-    object_data = src.data_handling.load_data_kettle(path_to_data)
-    T_kettle_wrt_tracker = src.data_handling.load_tracker_kettle_calibration_data()
+    object_data = dh.load_data_kettle(path_to_data)
+    T_kettle_wrt_tracker = dh.load_tracker_kettle_calibration_data()
     nb_vertices = object_data["vertices"].shape[0]
     hom_vertices = numpy.column_stack([object_data["vertices"], numpy.ones(nb_vertices)])
     calibrated_vertices = T_kettle_wrt_tracker @ hom_vertices.T
     object_data["vertices"] = calibrated_vertices[:3, :].T
 else:
-    object_data = src.data_handling.create_cube_data()
+    object_data = dh.create_cube_data()
 
 # Plot the original rigid-body trajectory
 fig = plt.figure(figsize=(9, 9))
 ax = fig.add_subplot(111, projection="3d")
 key_values_body_frame, key_values_rigid_object = [0, -1], [0, -1]
-ax = src.plotting.plot_trajectory_origin(ax, T, color="b", linewidth=3.0)
-ax = src.plotting.plot_frames(ax, T, key_values_body_frame, color="b", linewidth=3.0, arrow_len=0.08)
-ax = src.plotting.plot_rigid_bodies(ax, T, key_values_rigid_object, object_data)
-ax = src.plotting.ax_settings_general(ax)
+ax = plotting.plot_trajectory_origin(ax, T, color="b", linewidth=3.0)
+ax = plotting.plot_frames(ax, T, key_values_body_frame, color="b", linewidth=3.0, arrow_len=0.08)
+ax = plotting.plot_rigid_bodies(ax, T, key_values_rigid_object, object_data)
+ax = plotting.ax_settings_general(ax)
 if input_trajectory == "pouring":
-    ax = src.plotting.ax_settings_pouring_trajectory(ax)
+    ax = plotting.ax_settings_pouring_trajectory(ax)
 fig.savefig(rf"{path_to_figures}/input_trajectory.svg")
 
 ############ Introduce variations in coordinate frame ##########
@@ -84,12 +84,12 @@ for j in range(nb_body_frame_transformations):
 # Plot the rigid-body trajectories with new body frames
 fig = plt.figure(figsize=(9, 9))
 ax = fig.add_subplot(111, projection="3d")
-ax = src.plotting.plot_rigid_bodies(ax, T, key_values_rigid_object, object_data)
+ax = plotting.plot_rigid_bodies(ax, T, key_values_rigid_object, object_data)
 key_values_body_frame, key_values_rigid_object = [0, -1], [0, -1]
 colors = ["r", "b"]
 for j in range(nb_body_frame_transformations):
-    ax = src.plotting.plot_trajectory_origin(ax, T_var[j], color=colors[j], linewidth=3.0)
-    ax = src.plotting.plot_frames(
+    ax = plotting.plot_trajectory_origin(ax, T_var[j], color=colors[j], linewidth=3.0)
+    ax = plotting.plot_frames(
         ax,
         T_var[j],
         key_values_body_frame,
@@ -97,9 +97,9 @@ for j in range(nb_body_frame_transformations):
         linewidth=3.0,
         arrow_len=0.08,
     )
-ax = src.plotting.ax_settings_general(ax)
+ax = plotting.ax_settings_general(ax)
 if input_trajectory == "pouring":
-    ax = src.plotting.ax_settings_pouring_trajectory(ax)
+    ax = plotting.ax_settings_pouring_trajectory(ax)
 fig.savefig(rf"{path_to_figures}/trajectories_with_different_body_frames.svg")
 
 ############ Calculate the SU decomposition ##########
@@ -111,7 +111,7 @@ U_reg = [numpy.zeros((6, 3, N - 3)) for j in range(nb_body_frame_transformations
 
 for j in range(nb_body_frame_transformations):
     # Calculate body twist trajectory
-    twist = src.robotics.calculate_bodytwist_from_poses(T_var[j], ds)
+    twist = rob.calculate_bodytwist_from_poses(T_var[j], ds)
 
     # Smooth the body twist trajectory
     twist_smooth = scipy.ndimage.gaussian_filter1d(twist, sigma=1.0, axis=1, mode="nearest")
@@ -122,10 +122,10 @@ for j in range(nb_body_frame_transformations):
         Xi_ = numpy.column_stack([twist_smooth[:, k], twist_smooth[:, k + 1], twist_smooth[:, k + 2]])
 
         # Compute U matrix without regularization
-        U_, _, _ = src.su_decomp.SU(Xi_)
+        U_, _, _ = su_decomp.SU(Xi_)
 
         # Compute U matrix with regularization
-        U_reg_, _, _ = src.su_decomp.SU(Xi_, L=0.3)
+        U_reg_, _, _ = su_decomp.SU(Xi_, L=0.3)
 
         # Store the results
         Xi[j][:, :, k] = Xi_
@@ -134,18 +134,18 @@ for j in range(nb_body_frame_transformations):
 
 
 ############ Plot the results ##########
-fig, axes = src.plotting.initialize_plot_twist_trajectory(progress_domain, input_trajectory)
+fig, axes = plotting.initialize_plot_twist_trajectory(progress_domain, input_trajectory)
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_twist_trajectory(axes, Xi[j][:, 0, :], progress_total, color=colors[j])
+    axes = plotting.plot_twist_trajectory(axes, Xi[j][:, 0, :], progress_total, color=colors[j])
 fig.savefig(rf"{path_to_figures}/twists.svg")
 
-fig, axes = src.plotting.initialize_plot_U(progress_domain, input_trajectory)
+fig, axes = plotting.initialize_plot_U(progress_domain, input_trajectory)
 linewidths = [3.0, 1.5]
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_U(axes, U[j], progress_total, color=colors[j], linewidth=linewidths[j])
+    axes = plotting.plot_U(axes, U[j], progress_total, color=colors[j], linewidth=linewidths[j])
 fig.savefig(rf"{path_to_figures}/U.svg")
 
-fig, axes = src.plotting.initialize_plot_U(progress_domain, input_trajectory)
+fig, axes = plotting.initialize_plot_U(progress_domain, input_trajectory)
 for j in range(nb_body_frame_transformations):
-    axes = src.plotting.plot_U(axes, U_reg[j], progress_total, color=colors[j], linewidth=linewidths[j])
+    axes = plotting.plot_U(axes, U_reg[j], progress_total, color=colors[j], linewidth=linewidths[j])
 fig.savefig(rf"{path_to_figures}/U_reg.svg")

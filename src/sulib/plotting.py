@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib.colors import LightSource
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-import src.data_handling
+import sulib.data_handling as dh
 
 
 def plot_trajectory_origin(ax, T, color="b", linewidth=4.0):
@@ -44,8 +44,8 @@ def plot_rigid_body(ax, T, object_data):
     transformed_vertices = T @ hom_vertices.T
 
     ls = LightSource(azdeg=135, altdeg=45)
-    polygons = src.data_handling.construct_polygons(transformed_vertices[:3, :].T, object_data["faces"])
-    normals = src.data_handling.compute_normals(polygons)
+    polygons = dh.construct_polygons(transformed_vertices[:3, :].T, object_data["faces"])
+    normals = dh.compute_normals(polygons)
     shade_vals = ls.shade_normals(normals, fraction=1.0)  # Grayscale
     cmap = plt.cm.Blues  # Or try 'viridis', 'plasma', etc.
     shade_colors = cmap(0.4 / (shade_vals + 0.01))  # Map grayscale to RGBA

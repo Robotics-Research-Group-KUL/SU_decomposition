@@ -1,0 +1,14 @@
+LICENSE
+README.md
+pyproject.toml
+src/my_project.egg-info/PKG-INFO
+src/my_project.egg-info/SOURCES.txt
+src/my_project.egg-info/dependency_links.txt
+src/my_project.egg-info/top_level.txt
+src/sulib/__init__.py
+src/sulib/backend_notebook.py
+src/sulib/data_handling.py
+src/sulib/plotting.py
+src/sulib/robotics.py
+src/sulib/su_decomp.py
+tests/test_example.py

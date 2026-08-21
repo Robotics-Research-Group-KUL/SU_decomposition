@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import scipy
 
-from src.robotics import interpT, inverse_T, quat2pose
+from sulib.robotics import interpT, inverse_T, quat2pose
 
 
 def load_pose_data_from_csv(csv_file):
