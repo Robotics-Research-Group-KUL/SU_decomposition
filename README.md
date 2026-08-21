@@ -1,3 +1,5 @@
+[![CI](https://github.com/arnoverduyn/SU_decomposition/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/arnoverduyn/SU_decomposition/actions/workflows/ci.yml)
+
 # SU Decomposition
 This repository contains code and numerical examples of the application of the SU-decomposition to rigid-body motion trajectory data. The numerical examples are presented in a Jupyter notebook (see `notebooks/notebook.ipynb`).
 
