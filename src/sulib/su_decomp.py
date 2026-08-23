@@ -15,6 +15,14 @@ def RU_signed(A):
     U: np.ndarray of shape (3, 3)
     """
 
+    # Add regularization for numerical stability
+    if np.linalg.norm(A[:,0]) == 0:
+        A[0,0] += 10**(-15)
+    if np.linalg.norm(np.cross(A[:,0],A[:,1])) == 0:
+        A[1,1] += 10**(-15)
+    if np.linalg.norm(np.cross(A[:,0],A[:,1])) == 0:
+        A[0,1] += 10**(-15)
+
     # Gramm-Shmidt orthogonalisation
     ex = A[:, 0] / np.linalg.norm(A[:, 0])
 
