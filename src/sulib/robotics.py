@@ -211,4 +211,3 @@ def calculate_dtwist_from_poses(T):
         twist[3:6, k] = twist_cross[:3, 3]
 
     return twist
-

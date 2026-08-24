@@ -3,9 +3,12 @@ import numpy as np
 import sulib.robotics as rob
 
 
-def RU_signed(A):
+def RU(A):
     """
-    QR-decomposition using Gramm-Shmidt with sign conventions for Q in SO3
+    Compute an SO(3)-constrained QR-like decomposition of a 3x3 matrix.
+    The first two columns of A are orthonormalized using the Gram-Schmidt procedure.
+    The third basis vector is constructed as the cross product of the first two,
+    ensuring that the resulting matrix R has determinant +1.
 
     Input:
     A: np.ndarray of shape (3, 3)
@@ -41,23 +44,23 @@ def RU_signed(A):
 
 def SU(X, L=10**10):
     """
-    Python equivalent of MATLAB eQR function.
+    Compute the SU-decomposition of a 6x3 matrix.
 
-    Parameters:
+    Input:
     X: np.ndarray of shape (6, 3)
-    regularization: bool
-    L: float
+    L: float, optional
+       Regularization parameter
 
-    Returns:
-    R: np.ndarray of shape (3, 3)
-    p: np.ndarray of shape (3,)
+    Output:
+    S: np.ndarray of shape (6, 6)
     U: np.ndarray of shape (6, 3)
+
     """
 
     # Calculate R
     X1 = X[0:3, :]
     X2 = X[3:6, :]
-    R, U1 = RU_signed(X1)
+    R, U1 = RU(X1)
     RTX2 = R.T @ X2
 
     # Calculate p_star
@@ -81,7 +84,7 @@ def SU(X, L=10**10):
         U2 = RTX2 - rob.skew(p_star) @ U1
 
         # Regularize R
-        _, U2_tri = RU_signed(U2)
+        _, U2_tri = RU(U2)
 
         # input matrix = [L*U1 U2]
         # target matrix = [L*U1 U2_tri]
@@ -104,14 +107,32 @@ def SU(X, L=10**10):
         U2 = RTX2 - rob.skew(p_star) @ U1
 
     U = np.vstack((U1, U2))
+    S = np.vstack((np.hstack((R, np.zeros((3, 3)))), np.hstack((rob.skew(p) @ R, R))))
 
-    return U, R, p
+    assert np.isclose(np.sum((S @ U - X)**2), 0.)
+
+    return S, U
 
 
 def compute_dutir_from_pose_traj(T, ds, L=10**10, twist_type="body"):
     """
-    Compute the dual-upper-triangular invariant representation of a given pose trajectory
+    Compute the DUTIR from a rigid-body pose trajectory.
+    The pose trajectory is first converted into a screw trajectory
+    (currently a body-twist trajectory), after which the SU-decomposition
+    is applied successively to overlapping windows of three twist samples.
+
+    Input:
+    T  : numpy.ndarray, shape (4, 4, N)
+    ds : float
+    L  : float, optional
+    twist_type : str, optional. Currently only "body" is supported.
+
+    Output:
+    dutir : numpy.ndarray, shape (6, 3, N-3)
+    twist : numpy.ndarray, shape (6, N-1)
+
     """
+
     T_shape = T.shape
     assert len(T_shape) == 3, "Input pose trajectory has wrong dimensions."
     assert T_shape[0] == 4, "Input pose trajectory has wrong dimensions."
@@ -135,8 +156,19 @@ def compute_dutir_from_pose_traj(T, ds, L=10**10, twist_type="body"):
 
 def compute_dutir_from_screw_traj(screw, L=10**10):
     """
-    Compute the dual-upper-triangular invariant representation of a given screw trajectory
+    Compute the DUTIR from a screw trajectory. The DUTIR is computed by
+    applying the SU-decomposition successively to overlapping windows
+    of three screw samples.
+
+    Input:
+    screw  : numpy.ndarray, shape (6, N)
+    L  : float, optional
+
+    Output:
+    dutir : numpy.ndarray, shape (6, 3, N-2)
+
     """
+
     screw_shape = screw.shape
     assert len(screw_shape) == 2, "Input screw trajectory has wrong dimensions."
     assert screw_shape[0] == 6, "Input screw trajectory has wrong dimensions."
@@ -152,7 +184,7 @@ def compute_dutir_from_screw_traj(screw, L=10**10):
         Xi = np.column_stack([screw[:, k], screw[:, k + 1], screw[:, k + 2]])
 
         # Compute U matrix
-        U, _, _ = SU(Xi, L=L)
+        _, U = SU(Xi, L=L)
 
         # Store the results
         dutir[:, :, k] = U

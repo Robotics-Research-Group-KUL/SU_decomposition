@@ -384,12 +384,13 @@ def plot_dutir(axes, dutir, s_max, color="b", linewidth=3.0):
 
     return axes
 
+
 def ax_uniform_yaxis_limits_dutir(axes):
     ax_counter = 0
-    y_lim_min_top = 0.
-    y_lim_max_top = 0.
-    y_lim_min_bot = 0.
-    y_lim_max_bot = 0.
+    y_lim_min_top = 0.0
+    y_lim_max_top = 0.0
+    y_lim_min_bot = 0.0
+    y_lim_max_bot = 0.0
     for ax_counter in range(18):
         ax = axes[ax_counter]
         y_lim_min, y_lim_max = ax.get_ylim()
@@ -405,7 +406,6 @@ def ax_uniform_yaxis_limits_dutir(axes):
                 y_lim_max_bot = y_lim_max
 
         ax_counter += 1
-
 
     for ax_counter in range(18):
         ax = axes[ax_counter]
