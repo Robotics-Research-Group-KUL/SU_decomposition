@@ -60,48 +60,24 @@ for j in range(nb_body_frame_transformations):
         wrench_var[j][:3, k] = T_inv[:3, :3] @ wrench[:3, k]
         wrench_var[j][3:6, k] = T_inv[:3, :3] @ wrench[3:6, k] + numpy.cross(T_inv[:3, 3], wrench_var[j][:3, k])
 
-############ Calculate the SU decomposition ##########
-
-# Initialise the results
-Xi = [numpy.zeros((6, 3, N - 3)) for j in range(nb_body_frame_transformations)]
-U = [numpy.zeros((6, 3, N - 3)) for j in range(nb_body_frame_transformations)]
-U_reg = [numpy.zeros((6, 3, N - 3)) for j in range(nb_body_frame_transformations)]
-
-for j in range(nb_body_frame_transformations):
-    # Smooth the wrench trajectory
-    wrench_smooth = scipy.ndimage.gaussian_filter1d(wrench_var[j], sigma=1.0, axis=1, mode="nearest")
-
-    # Perform the successive SU decompositions along the trajectory
-    for k in range(N - 3):
-        # Restructure twist data into successive overlapping windows of size (6,3)
-        Xi_ = numpy.column_stack([wrench_smooth[:, k], wrench_smooth[:, k + 1], wrench_smooth[:, k + 2]])
-
-        # Compute U matrix without regularization
-        U_, _, _ = su_decomp.SU(Xi_)
-
-        # Compute U matrix with regularization
-        U_reg_, _, _ = su_decomp.SU(Xi_, L=0.3)
-
-        # Store the results
-        Xi[j][:, :, k] = Xi_
-        U[j][:, :, k] = U_
-        U_reg[j][:, :, k] = U_reg_
-
-
-############ Plot the results ##########
+############ Plot the wrench trajectory ##########
 colors = ["r", "b"]
-fig, axes = plotting.initialize_plot_wrench_trajectory(progress_domain, input_trajectory)
+fig_wrench, axes_wrench = plotting.initialize_plot_wrench_trajectory(progress_domain, input_trajectory)
 for j in range(nb_body_frame_transformations):
-    axes = plotting.plot_twist_trajectory(axes, Xi[j][:, 0, :], progress_total, color=colors[j])
-fig.savefig(rf"{path_to_figures}/wrenches.svg")
+    plotting.plot_twist_trajectory(axes_wrench, wrench_var[j], progress_total, color=colors[j])
+fig_wrench.savefig(rf"{path_to_figures}/wrenches.svg")
 
-fig, axes = plotting.initialize_plot_U_wrench(progress_domain, input_trajectory)
+############ Calculate and plot the dutir representation ##########
+fig_dutir, axes_dutir = plotting.initialize_plot_dutir(progress_domain, input_trajectory)
+fig_dutir_reg, axes_dutir_reg = plotting.initialize_plot_dutir(progress_domain, input_trajectory)
+
 linewidths = [3.0, 1.5]
 for j in range(nb_body_frame_transformations):
-    axes = plotting.plot_U(axes, U[j], progress_total, color=colors[j], linewidth=linewidths[j])
-fig.savefig(rf"{path_to_figures}/U.svg")
+    dutir = su_decomp.compute_dutir_from_screw_traj(wrench_var[j])
+    plotting.plot_dutir(axes_dutir, dutir, progress_total, color=colors[j], linewidth=linewidths[j])
 
-fig, axes = plotting.initialize_plot_U(progress_domain, input_trajectory)
-for j in range(nb_body_frame_transformations):
-    axes = plotting.plot_U(axes, U_reg[j], progress_total, color=colors[j], linewidth=linewidths[j])
-fig.savefig(rf"{path_to_figures}/U_reg.svg")
+    dutir_reg = su_decomp.compute_dutir_from_screw_traj(wrench_var[j], L=0.3)
+    plotting.plot_dutir(axes_dutir_reg, dutir_reg, progress_total, color=colors[j], linewidth=linewidths[j])
+
+fig_dutir.savefig(rf"{path_to_figures}/dutir.svg")
+fig_dutir_reg.savefig(rf"{path_to_figures}/dutir_reg.svg")

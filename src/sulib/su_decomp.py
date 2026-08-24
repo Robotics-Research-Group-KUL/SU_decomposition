@@ -1,6 +1,6 @@
 import numpy as np
 
-from sulib.robotics import skew
+import sulib.robotics as rob
 
 
 def RU_signed(A):
@@ -16,12 +16,12 @@ def RU_signed(A):
     """
 
     # Add regularization for numerical stability
-    if np.linalg.norm(A[:,0]) == 0:
-        A[0,0] += 10**(-15)
-    if np.linalg.norm(np.cross(A[:,0],A[:,1])) == 0:
-        A[1,1] += 10**(-15)
-    if np.linalg.norm(np.cross(A[:,0],A[:,1])) == 0:
-        A[0,1] += 10**(-15)
+    if np.linalg.norm(A[:, 0]) == 0:
+        A[0, 0] += 10 ** (-15)
+    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) == 0:
+        A[1, 1] += 10 ** (-15)
+    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) == 0:
+        A[0, 1] += 10 ** (-15)
 
     # Gramm-Shmidt orthogonalisation
     ex = A[:, 0] / np.linalg.norm(A[:, 0])
@@ -78,7 +78,7 @@ def SU(X, L=10**10):
         p_star = np.array([x, y, z])
 
         p = R @ p_star
-        U2 = RTX2 - skew(p_star) @ U1
+        U2 = RTX2 - rob.skew(p_star) @ U1
 
         # Regularize R
         _, U2_tri = RU_signed(U2)
@@ -101,8 +101,60 @@ def SU(X, L=10**10):
         R = R @ Rc.T
     else:
         p = R @ p_star
-        U2 = RTX2 - skew(p_star) @ U1
+        U2 = RTX2 - rob.skew(p_star) @ U1
 
     U = np.vstack((U1, U2))
 
     return U, R, p
+
+
+def compute_dutir_from_pose_traj(T, ds, L=10**10, twist_type="body"):
+    """
+    Compute the dual-upper-triangular invariant representation of a given pose trajectory
+    """
+    T_shape = T.shape
+    assert len(T_shape) == 3, "Input pose trajectory has wrong dimensions."
+    assert T_shape[0] == 4, "Input pose trajectory has wrong dimensions."
+    assert T_shape[1] == 4, "Input pose trajectory has wrong dimensions."
+    assert T_shape[2] >= 4, (
+        "Input pose trajectory has insufficent number of trajectory samples, "
+        "a minimum of four pose samples is required."
+    )
+
+    # Calculate body twist trajectory
+    if twist_type == "body":
+        twist = rob.calculate_bodytwist_from_poses(T, ds)
+    else:
+        raise TypeError("Wrong twist type, supported type(s) are 'body'.")
+
+    # Calculate the dutir from the twist trajectory
+    dutir = compute_dutir_from_screw_traj(twist, L)
+
+    return dutir, twist
+
+
+def compute_dutir_from_screw_traj(screw, L=10**10):
+    """
+    Compute the dual-upper-triangular invariant representation of a given screw trajectory
+    """
+    screw_shape = screw.shape
+    assert len(screw_shape) == 2, "Input screw trajectory has wrong dimensions."
+    assert screw_shape[0] == 6, "Input screw trajectory has wrong dimensions."
+    assert screw_shape[1] >= 3, (
+        "Input screw trajectory has insufficent number of trajectory samples, a minimum of three samples is required."
+    )
+
+    # Perform the successive SU decompositions along the trajectory
+    N = screw_shape[1]
+    dutir = np.zeros((6, 3, N - 2))
+    for k in range(N - 2):
+        # Restructure twist data into successive overlapping windows of size (6,3)
+        Xi = np.column_stack([screw[:, k], screw[:, k + 1], screw[:, k + 2]])
+
+        # Compute U matrix
+        U, _, _ = SU(Xi, L=L)
+
+        # Store the results
+        dutir[:, :, k] = U
+
+    return dutir

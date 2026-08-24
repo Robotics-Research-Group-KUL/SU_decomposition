@@ -392,6 +392,21 @@ def load_tracker_kettle_calibration_data():
     return T_kettle_wrt_tracker
 
 
+def load_object_data(input_trajectory, path_to_data):
+    # Load the data of the rigid body for visualization purposes
+    if input_trajectory == "pouring":
+        object_data = load_data_kettle(path_to_data)
+        T_kettle_wrt_tracker = load_tracker_kettle_calibration_data()
+        nb_vertices = object_data["vertices"].shape[0]
+        hom_vertices = np.column_stack([object_data["vertices"], np.ones(nb_vertices)])
+        calibrated_vertices = T_kettle_wrt_tracker @ hom_vertices.T
+        object_data["vertices"] = calibrated_vertices[:3, :].T
+    else:
+        object_data = create_cube_data()
+
+    return object_data
+
+
 def read_descriptor(location):
     descriptor = pd.read_csv(location, header=None, compression="gzip").values
     return descriptor

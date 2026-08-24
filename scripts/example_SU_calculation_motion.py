@@ -9,10 +9,10 @@ import sulib.robotics as rob
 import sulib.su_decomp as su_decomp
 
 ############ Input ##########
-input_trajectory = "contour_following"
+input_trajectory = "pouring"
 # options: 'helical_translation', 'axis_rotation', 'precession', 'pouring', 'contour_following',
 #          'peg_on_hole_alignment'
-progress_domain = "geometric"
+progress_domain = "time"
 # options: 'time', 'geometric'
 
 ############ Load and preprocess the trajectory and object data ##########
@@ -102,50 +102,21 @@ if input_trajectory == "pouring":
     ax = plotting.ax_settings_pouring_trajectory(ax)
 fig.savefig(rf"{path_to_figures}/trajectories_with_different_body_frames.svg")
 
-############ Calculate the SU decomposition ##########
+############ Calculate and plot the twist trajectory and dutir representation ##########
 
-# Initialise the results
-Xi = [numpy.zeros((6, 3, N - 3)) for j in range(nb_body_frame_transformations)]
-U = [numpy.zeros((6, 3, N - 3)) for j in range(nb_body_frame_transformations)]
-U_reg = [numpy.zeros((6, 3, N - 3)) for j in range(nb_body_frame_transformations)]
+fig_twist, axes_twist = plotting.initialize_plot_twist_trajectory(progress_domain, input_trajectory)
+fig_dutir, axes_dutir = plotting.initialize_plot_dutir(progress_domain, input_trajectory)
+fig_dutir_reg, axes_dutir_reg = plotting.initialize_plot_dutir(progress_domain, input_trajectory)
 
-for j in range(nb_body_frame_transformations):
-    # Calculate body twist trajectory
-    twist = rob.calculate_bodytwist_from_poses(T_var[j], ds)
-
-    # Smooth the body twist trajectory
-    twist_smooth = scipy.ndimage.gaussian_filter1d(twist, sigma=1.0, axis=1, mode="nearest")
-
-    # Perform the successive SU decompositions along the trajectory
-    for k in range(N - 3):
-        # Restructure twist data into successive overlapping windows of size (6,3)
-        Xi_ = numpy.column_stack([twist_smooth[:, k], twist_smooth[:, k + 1], twist_smooth[:, k + 2]])
-
-        # Compute U matrix without regularization
-        U_, _, _ = su_decomp.SU(Xi_)
-
-        # Compute U matrix with regularization
-        U_reg_, _, _ = su_decomp.SU(Xi_, L=0.3)
-
-        # Store the results
-        Xi[j][:, :, k] = Xi_
-        U[j][:, :, k] = U_
-        U_reg[j][:, :, k] = U_reg_
-
-
-############ Plot the results ##########
-fig, axes = plotting.initialize_plot_twist_trajectory(progress_domain, input_trajectory)
-for j in range(nb_body_frame_transformations):
-    axes = plotting.plot_twist_trajectory(axes, Xi[j][:, 0, :], progress_total, color=colors[j])
-fig.savefig(rf"{path_to_figures}/twists.svg")
-
-fig, axes = plotting.initialize_plot_U(progress_domain, input_trajectory)
 linewidths = [3.0, 1.5]
 for j in range(nb_body_frame_transformations):
-    axes = plotting.plot_U(axes, U[j], progress_total, color=colors[j], linewidth=linewidths[j])
-fig.savefig(rf"{path_to_figures}/U.svg")
+    dutir, twist = su_decomp.compute_dutir_from_pose_traj(T_var[j], ds, twist_type="body")
+    plotting.plot_twist_trajectory(axes_twist, twist, progress_total, color=colors[j])
+    plotting.plot_dutir(axes_dutir, dutir, progress_total, color=colors[j], linewidth=linewidths[j])
 
-fig, axes = plotting.initialize_plot_U(progress_domain, input_trajectory)
-for j in range(nb_body_frame_transformations):
-    axes = plotting.plot_U(axes, U_reg[j], progress_total, color=colors[j], linewidth=linewidths[j])
-fig.savefig(rf"{path_to_figures}/U_reg.svg")
+    dutir_reg, _ = su_decomp.compute_dutir_from_pose_traj(T_var[j], ds, L=0.3, twist_type="body")
+    plotting.plot_dutir(axes_dutir_reg, dutir_reg, progress_total, color=colors[j], linewidth=linewidths[j])
+
+fig_twist.savefig(rf"{path_to_figures}/twists.svg")
+fig_dutir.savefig(rf"{path_to_figures}/dutir.svg")
+fig_dutir_reg.savefig(rf"{path_to_figures}/dutir_reg.svg")
