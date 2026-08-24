@@ -1,5 +1,5 @@
 [project]
-name = "my-project"
+name = "sulib"
 version = "0.1.0"
 license-files = ["LICENSE"]
 description = "Python code for SU-decomposition"
