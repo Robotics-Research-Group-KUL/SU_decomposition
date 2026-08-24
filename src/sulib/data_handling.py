@@ -6,7 +6,7 @@ import pandas as pd
 import scipy
 
 import sulib.preprocessing as pp
-from sulib.robotics import interpT, inverse_T, quat2pose
+from sulib.robotics import inverse_T, quat2pose
 
 
 def load_pose_data_from_csv(csv_file):

@@ -6,7 +6,6 @@ import scipy
 import sulib.data_handling as dh
 import sulib.plotting as plotting
 import sulib.preprocessing as pp
-import sulib.robotics as rob
 import sulib.su_decomp as su_decomp
 
 ############ Input ##########
