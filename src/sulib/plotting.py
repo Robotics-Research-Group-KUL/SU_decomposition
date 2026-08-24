@@ -195,7 +195,7 @@ def initialize_plot_wrench_trajectory(progress_domain="time", input_trajectory="
     return fig, axes
 
 
-def initialize_plot_U(progress_domain="time", input_trajectory="pouring"):
+def initialize_plot_dutir(progress_domain="time", input_trajectory="pouring"):
 
     fig = plt.figure(figsize=(7, 9))
     axes = []
@@ -272,7 +272,7 @@ def initialize_plot_U(progress_domain="time", input_trajectory="pouring"):
     return fig, axes
 
 
-def initialize_plot_U_wrench(progress_domain="time", input_trajectory="pouring"):
+def initialize_plot_dutir_wrench(progress_domain="time", input_trajectory="pouring"):
 
     fig = plt.figure(figsize=(7, 9))
     axes = []
@@ -348,9 +348,9 @@ def initialize_plot_U_wrench(progress_domain="time", input_trajectory="pouring")
     return fig, axes
 
 
-def plot_U(axes, U, s_max, color="b", linewidth=3.0):
+def plot_dutir(axes, dutir, s_max, color="b", linewidth=3.0):
 
-    progress_axis = np.linspace(0, s_max, U.shape[2])
+    progress_axis = np.linspace(0, s_max, dutir.shape[2])
 
     nb_rows = 6
     nb_columns = 3
@@ -362,14 +362,14 @@ def plot_U(axes, U, s_max, color="b", linewidth=3.0):
 
             ax.plot(
                 progress_axis,
-                U[row_subplot, col_subplot, :],
+                dutir[row_subplot, col_subplot, :],
                 color=color,
                 linewidth=linewidth,
             )
 
             update_limits = False
-            ymin_current = min(U[row_subplot, col_subplot, :])
-            ymax_current = max(U[row_subplot, col_subplot, :])
+            ymin_current = min(dutir[row_subplot, col_subplot, :])
+            ymax_current = max(dutir[row_subplot, col_subplot, :])
             if ymin_current < ymin_prev:
                 update_limits = True
                 ymin_prev = 1.2 * ymin_current
