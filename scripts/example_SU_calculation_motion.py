@@ -12,7 +12,7 @@ import sulib.su_decomp as su_decomp
 input_trajectory = "pouring"
 # options: 'helical_translation', 'axis_rotation', 'precession', 'pouring', 'contour_following',
 #          'peg_on_hole_alignment'
-progress_domain = "time"
+progress_domain = "geometric"
 # options: 'time', 'geometric'
 
 ############ Load and preprocess the trajectory and object data ##########
@@ -31,6 +31,7 @@ elif progress_domain == "geometric":
     s = pp.calculate_geom_progress_axis(T_raw, dt, L=0.3)
     ds = 0.02  # -> 2 cm
     T = pp.preprocess_pose_data(T_raw, s, ds)
+    N = T.shape[2]
 
 progress_total = (N - 1) * ds
 

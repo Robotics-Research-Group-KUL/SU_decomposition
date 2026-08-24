@@ -32,7 +32,8 @@ elif progress_domain == "geometric":
     ds = 0.02  # -> 2 cm
     T = pp.preprocess_pose_data(T_raw, s, ds)
     wrench = pp.preprocess_wrench_data(wrench_raw, s, ds)
-
+    N = T.shape[2]
+    
 progress_total = (N - 1) * ds
 
 ############ Introduce variations in coordinate frame ##########
