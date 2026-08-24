@@ -194,7 +194,7 @@ def synthetic_precession():
     return T, dt
 
 
-def load_recorded_pouring_motion(path_to_data, dt = 0.02):
+def load_recorded_pouring_motion(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/pouring/Trial1_coffee_kettle_ref_top.csv"
     T, t = load_pose_data_from_csv(data_file)
@@ -208,7 +208,7 @@ def load_recorded_pouring_motion(path_to_data, dt = 0.02):
     return T, dt
 
 
-def load_recorded_contour_following_motion(path_to_data, dt = 0.02):
+def load_recorded_contour_following_motion(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
@@ -217,7 +217,7 @@ def load_recorded_contour_following_motion(path_to_data, dt = 0.02):
     return T, dt
 
 
-def load_recorded_contour_following_force(path_to_data, dt = 0.02):
+def load_recorded_contour_following_force(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
@@ -228,7 +228,7 @@ def load_recorded_contour_following_force(path_to_data, dt = 0.02):
     return T, wrench, dt
 
 
-def load_recorded_peg_on_hole_alignment_motion(path_to_data, dt = 0.02):
+def load_recorded_peg_on_hole_alignment_motion(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
@@ -237,7 +237,7 @@ def load_recorded_peg_on_hole_alignment_motion(path_to_data, dt = 0.02):
     return T, dt
 
 
-def load_recorded_peg_on_hole_alignment_force(path_to_data, dt = 0.02):
+def load_recorded_peg_on_hole_alignment_force(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)

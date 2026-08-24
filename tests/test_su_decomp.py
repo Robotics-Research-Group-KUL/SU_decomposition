@@ -8,6 +8,7 @@ def test_SU_trivial():
     Xi = np.zeros((6, 3))
     su_decomp.SU(Xi)
 
+
 def test_dutir_trivial():
     N = 100
     ds = 0.01

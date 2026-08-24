@@ -20,7 +20,7 @@ def make_array_equidistant(array, N):
     return array_equidistant
 
 
-def preprocess_time_axis(t,stepsize):
+def preprocess_time_axis(t, stepsize):
     t0 = remove_offset_array(t)
     N = calculate_number_of_equidistant_steps_in_array(t0, stepsize=stepsize)
     t0_equidistant = make_array_equidistant(t0, N)
@@ -29,8 +29,8 @@ def preprocess_time_axis(t,stepsize):
 
 def preprocess_pose_data(T, t, dt):
 
-    t0_equi, t0 = preprocess_time_axis(t, stepsize = dt)
-    
+    t0_equi, t0 = preprocess_time_axis(t, stepsize=dt)
+
     # Interpolate pose data to equidistant stepsize
     T = rob.interpT(t0, T, t0_equi)
 
@@ -39,28 +39,29 @@ def preprocess_pose_data(T, t, dt):
 
 def preprocess_wrench_data(wrench, t, dt):
 
-    t0_equi, t0 = preprocess_time_axis(t, stepsize = dt)
-    
+    t0_equi, t0 = preprocess_time_axis(t, stepsize=dt)
+
     # Interpolate wrench data to equidistant timesteps
     wrench = np.vstack([np.interp(t0_equi, t0, wrench[i, :]) for i in range(wrench.shape[0])])
 
     return wrench
 
 
-def filter_pose_data(T, sigma = 10):
+def filter_pose_data(T, sigma=10):
 
     for j in range(4):
         for k in range(3):
-            T[k, j, :] = gaussian_filter1d(T[k, j, :], sigma = sigma, mode = 'nearest')
+            T[k, j, :] = gaussian_filter1d(T[k, j, :], sigma=sigma, mode="nearest")
 
     N = T.shape[2]
     for j in range(N):
-        R = T[:3,:3,j]
+        R = T[:3, :3, j]
         U, _, VT = np.linalg.svd(R)
         R = U @ VT
-        T[:3,:3,j] = np.copy(R)
+        T[:3, :3, j] = np.copy(R)
 
     return T
+
 
 def calculate_geom_progress_axis(T, dt, L):
     """
