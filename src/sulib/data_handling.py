@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import scipy
 
-from sulib.robotics import interpT, inverse_T, quat2pose
+import sulib.preprocessing as pp
+from sulib.robotics import inverse_T, quat2pose
 
 
 def load_pose_data_from_csv(csv_file):
@@ -60,22 +61,6 @@ def load_wrench_data_from_dat(dat_file):
     wrench = raw_data[:, 8:14].T
 
     return wrench, t
-
-
-def remove_offset_array(array):
-    array -= array[0]
-    return array
-
-
-def calculate_number_of_equidistant_steps_in_array(array, stepsize=0.02):
-    array_without_offset = remove_offset_array(array)
-    N = int(1 + np.floor(array_without_offset[-1] / stepsize))
-    return N
-
-
-def make_array_equidistant(array, N):
-    array_equidistant = np.linspace(array[0], array[-1], N)
-    return array_equidistant
 
 
 def write_ndarray_to_csv_file(ndarray, file_location):
@@ -209,85 +194,56 @@ def synthetic_precession():
     return T, dt
 
 
-def load_recorded_pouring_motion(path_to_data):
+def load_recorded_pouring_motion(path_to_data, dt = 0.02):
 
     data_file = rf"{path_to_data}/demos/pouring/Trial1_coffee_kettle_ref_top.csv"
     T, t = load_pose_data_from_csv(data_file)
-    t = remove_offset_array(t)
-
-    # Interpolate pose data to equidistant timesteps
-    dt = 0.02
-    N = calculate_number_of_equidistant_steps_in_array(t, stepsize=dt)
-    t_equidistant = make_array_equidistant(t, N)
-    T = interpT(t, T, t_equidistant)
+    T = pp.preprocess_pose_data(T, t, dt)
 
     # Extract first half of the trajectory
+    N = T.shape[2]
     index_cut = round(N / 2) + 20
     T = T[:, :, :index_cut]
 
     return T, dt
 
 
-def load_recorded_contour_following_motion(path_to_data):
+def load_recorded_contour_following_motion(path_to_data, dt = 0.02):
 
     data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
-    t = remove_offset_array(t)
-
-    # Interpolate pose data to equidistant timesteps
-    dt = 0.02
-    N = calculate_number_of_equidistant_steps_in_array(t, stepsize=dt)
-    t_equidistant = make_array_equidistant(t, N)
-    T = interpT(t, T, t_equidistant)
+    T = pp.preprocess_pose_data(T, t, dt)
 
     return T, dt
 
 
-def load_recorded_contour_following_force(path_to_data):
+def load_recorded_contour_following_force(path_to_data, dt = 0.02):
 
     data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     wrench, _ = load_wrench_data_from_dat(data_file)
-    t = remove_offset_array(t)
-
-    # Interpolate pose data to equidistant timesteps
-    dt = 0.02
-    N = calculate_number_of_equidistant_steps_in_array(t, stepsize=dt)
-    t_equidistant = make_array_equidistant(t, N)
-    T = interpT(t, T, t_equidistant)
-    wrench = np.vstack([np.interp(t_equidistant, t, wrench[i, :]) for i in range(wrench.shape[0])])
+    T = pp.preprocess_pose_data(T, t, dt)
+    wrench = pp.preprocess_wrench_data(wrench, t, dt)
 
     return T, wrench, dt
 
 
-def load_recorded_peg_on_hole_alignment_motion(path_to_data):
+def load_recorded_peg_on_hole_alignment_motion(path_to_data, dt = 0.02):
 
     data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
-    t = remove_offset_array(t)
-
-    # Interpolate pose data to equidistant timesteps
-    dt = 0.02
-    N = calculate_number_of_equidistant_steps_in_array(t, stepsize=dt)
-    t_equidistant = make_array_equidistant(t, N)
-    T = interpT(t, T, t_equidistant)
+    T = pp.preprocess_pose_data(T, t, dt)
 
     return T, dt
 
 
-def load_recorded_peg_on_hole_alignment_force(path_to_data):
+def load_recorded_peg_on_hole_alignment_force(path_to_data, dt = 0.02):
 
     data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     wrench, t = load_wrench_data_from_dat(data_file)
-    t = remove_offset_array(t)
-
-    # Interpolate pose data to equidistant timesteps
-    dt = 0.02
-    N = calculate_number_of_equidistant_steps_in_array(t, stepsize=dt)
-    t_equidistant = make_array_equidistant(t, N)
-    T = interpT(t, T, t_equidistant)
-    wrench = np.vstack([np.interp(t_equidistant, t, wrench[i, :]) for i in range(wrench.shape[0])])
+    T = pp.preprocess_pose_data(T, t, dt)
+    wrench = pp.preprocess_wrench_data(wrench, t, dt)
 
     return T, wrench, dt
 
