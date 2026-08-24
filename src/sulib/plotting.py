@@ -384,6 +384,37 @@ def plot_dutir(axes, dutir, s_max, color="b", linewidth=3.0):
 
     return axes
 
+def ax_uniform_yaxis_limits_dutir(axes):
+    ax_counter = 0
+    y_lim_min_top = 0.
+    y_lim_max_top = 0.
+    y_lim_min_bot = 0.
+    y_lim_max_bot = 0.
+    for ax_counter in range(18):
+        ax = axes[ax_counter]
+        y_lim_min, y_lim_max = ax.get_ylim()
+        if ax_counter < 9:
+            if y_lim_min < y_lim_min_top:
+                y_lim_min_top = y_lim_min
+            if y_lim_max > y_lim_max_top:
+                y_lim_max_top = y_lim_max
+        else:
+            if y_lim_min < y_lim_min_bot:
+                y_lim_min_bot = y_lim_min
+            if y_lim_max > y_lim_max_bot:
+                y_lim_max_bot = y_lim_max
+
+        ax_counter += 1
+
+
+    for ax_counter in range(18):
+        ax = axes[ax_counter]
+        if ax_counter < 9:
+            ax.set_ylim(y_lim_min_top, y_lim_max_top)
+        else:
+            ax.set_ylim(y_lim_min_bot, y_lim_max_bot)
+        ax_counter += 1
+
 
 def ax_settings_pouring_trajectory(ax):
     ax.view_init(elev=30, azim=135)  # Better 3D angle

@@ -5,6 +5,7 @@ import scipy
 
 import sulib.data_handling as dh
 import sulib.plotting as plotting
+import sulib.preprocessing as pp
 import sulib.robotics as rob
 import sulib.su_decomp as su_decomp
 
@@ -28,11 +29,9 @@ if progress_domain == "time":
     N = T.shape[2]
 elif progress_domain == "geometric":
     # Interpolate pose data to equidistant geometric progress steps
-    s = rob.calculate_geom_progress_axis(T_raw, dt, L=0.3)
+    s = pp.calculate_geom_progress_axis(T_raw, dt, L=0.3)
     ds = 0.02  # -> 2 cm
-    N = dh.calculate_number_of_equidistant_steps_in_array(s, stepsize=ds)
-    s_equidistant = dh.make_array_equidistant(s, N)
-    T = rob.interpT(s, T_raw, s_equidistant)
+    T = pp.preprocess_pose_data(T_raw, s, ds)
 
 progress_total = (N - 1) * ds
 
