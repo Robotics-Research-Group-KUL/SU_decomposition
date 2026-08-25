@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib.colors import LightSource
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-import sulib.data_handling as dh
+import sulib._data_handling as dh
 
 
 def plot_trajectory_origin(ax, T, color="b", linewidth=4.0):

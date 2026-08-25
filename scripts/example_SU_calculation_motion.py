@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import numpy
 import scipy
 
-import sulib.data_handling as dh
-import sulib.plotting as plotting
-import sulib.preprocessing as pp
+import sulib._data_handling as dh
+import sulib._plotting as plotting
+import sulib._preprocessing as pp
 import sulib.su_decomp as su_decomp
 
 ############ Input ##########
