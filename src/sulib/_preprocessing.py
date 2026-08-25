@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 
-import sulib.robotics as rob
+import sulib._robotics as rob
 
 
 def remove_offset_array(array):

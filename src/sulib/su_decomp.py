@@ -1,6 +1,6 @@
 import numpy as np
 
-import sulib.robotics as rob
+from sulib._robotics import calculate_bodytwist_from_poses, skew
 
 
 def RU(A):
@@ -81,7 +81,7 @@ def SU(X, L=10**10):
         p_star = np.array([x, y, z])
 
         p = R @ p_star
-        U2 = RTX2 - rob.skew(p_star) @ U1
+        U2 = RTX2 - skew(p_star) @ U1
 
         # Regularize R
         _, U2_tri = RU(U2)
@@ -104,12 +104,12 @@ def SU(X, L=10**10):
         R = R @ Rc.T
     else:
         p = R @ p_star
-        U2 = RTX2 - rob.skew(p_star) @ U1
+        U2 = RTX2 - skew(p_star) @ U1
 
     U = np.vstack((U1, U2))
-    S = np.vstack((np.hstack((R, np.zeros((3, 3)))), np.hstack((rob.skew(p) @ R, R))))
+    S = np.vstack((np.hstack((R, np.zeros((3, 3)))), np.hstack((skew(p) @ R, R))))
 
-    assert np.isclose(np.sum((S @ U - X)**2), 0.)
+    assert np.isclose(np.sum((S @ U - X) ** 2), 0.0)
 
     return S, U
 
@@ -144,7 +144,7 @@ def compute_dutir_from_pose_traj(T, ds, L=10**10, twist_type="body"):
 
     # Calculate body twist trajectory
     if twist_type == "body":
-        twist = rob.calculate_bodytwist_from_poses(T, ds)
+        twist = calculate_bodytwist_from_poses(T, ds)
     else:
         raise TypeError("Wrong twist type, supported type(s) are 'body'.")
 
