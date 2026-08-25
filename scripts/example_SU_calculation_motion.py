@@ -109,11 +109,11 @@ fig_dutir_reg, axes_dutir_reg = plotting.initialize_plot_dutir(progress_domain, 
 
 linewidths = [3.0, 1.5]
 for j in range(nb_body_frame_transformations):
-    dutir, twist = su_decomp.compute_dutir_from_pose_traj(T_var[j], ds, twist_type="body")
+    dutir, twist = su_decomp.pose_trajectory_to_dutir(T_var[j], ds, twist_type="body")
     plotting.plot_twist_trajectory(axes_twist, twist, progress_total, color=colors[j])
     plotting.plot_dutir(axes_dutir, dutir, progress_total, color=colors[j], linewidth=linewidths[j])
 
-    dutir_reg, _ = su_decomp.compute_dutir_from_pose_traj(T_var[j], ds, L=0.3, twist_type="body")
+    dutir_reg, _ = su_decomp.pose_trajectory_to_dutir(T_var[j], ds, L=0.3, twist_type="body")
     plotting.plot_dutir(axes_dutir_reg, dutir_reg, progress_total, color=colors[j], linewidth=linewidths[j])
 
 fig_twist.savefig(rf"{path_to_figures}/twists.svg")

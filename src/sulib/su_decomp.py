@@ -114,7 +114,7 @@ def SU(X, L=10**10):
     return S, U
 
 
-def compute_dutir_from_pose_traj(T, ds, L=10**10, twist_type="body"):
+def pose_trajectory_to_dutir(T, ds, L=10**10, twist_type="body"):
     """
     Compute the DUTIR from a rigid-body pose trajectory.
     The pose trajectory is first converted into a screw trajectory
@@ -149,12 +149,12 @@ def compute_dutir_from_pose_traj(T, ds, L=10**10, twist_type="body"):
         raise TypeError("Wrong twist type, supported type(s) are 'body'.")
 
     # Calculate the dutir from the twist trajectory
-    dutir = compute_dutir_from_screw_traj(twist, L)
+    dutir = screw_trajectory_to_dutir(twist, L)
 
     return dutir, twist
 
 
-def compute_dutir_from_screw_traj(screw, L=10**10):
+def screw_trajectory_to_dutir(screw, L=10**10):
     """
     Compute the DUTIR from a screw trajectory. The DUTIR is computed by
     applying the SU-decomposition successively to overlapping windows

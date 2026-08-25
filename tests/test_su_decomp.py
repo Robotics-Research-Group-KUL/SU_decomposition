@@ -15,4 +15,4 @@ def test_dutir_trivial():
     T = np.zeros((4, 4, N))
     for k in range(N):
         T[:, :, k] = np.eye(4)
-    su_decomp.compute_dutir_from_pose_traj(T, ds, L=0.3, twist_type="body")
+    su_decomp.pose_trajectory_to_dutir(T, ds, L=0.3, twist_type="body")
