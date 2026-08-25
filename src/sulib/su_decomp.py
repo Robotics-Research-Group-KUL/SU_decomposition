@@ -1,6 +1,6 @@
 import numpy as np
 
-from sulib._robotics import skew, calculate_bodytwist_from_poses
+from sulib._robotics import calculate_bodytwist_from_poses, skew
 
 
 def RU(A):
@@ -109,7 +109,7 @@ def SU(X, L=10**10):
     U = np.vstack((U1, U2))
     S = np.vstack((np.hstack((R, np.zeros((3, 3)))), np.hstack((skew(p) @ R, R))))
 
-    assert np.isclose(np.sum((S @ U - X)**2), 0.)
+    assert np.isclose(np.sum((S @ U - X) ** 2), 0.0)
 
     return S, U
 
