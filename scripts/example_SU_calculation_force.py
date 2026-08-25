@@ -73,10 +73,10 @@ fig_dutir_reg, axes_dutir_reg = plotting.initialize_plot_dutir(progress_domain, 
 
 linewidths = [3.0, 1.5]
 for j in range(nb_body_frame_transformations):
-    dutir = su_decomp.compute_dutir_from_screw_traj(wrench_var[j])
+    dutir = su_decomp.screw_trajectory_to_dutir(wrench_var[j])
     plotting.plot_dutir(axes_dutir, dutir, progress_total, color=colors[j], linewidth=linewidths[j])
 
-    dutir_reg = su_decomp.compute_dutir_from_screw_traj(wrench_var[j], L=0.3)
+    dutir_reg = su_decomp.screw_trajectory_to_dutir(wrench_var[j], L=0.3)
     plotting.plot_dutir(axes_dutir_reg, dutir_reg, progress_total, color=colors[j], linewidth=linewidths[j])
 
 fig_dutir.savefig(rf"{path_to_figures}/dutir.svg")
