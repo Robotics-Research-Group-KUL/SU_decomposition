@@ -47,10 +47,10 @@ SU_decomposition/
 │
 ├── src/
 │   └── sulib/
-│       ├── data_handling.py
-│       ├── plotting.py
-│       ├── preprocessing.py
-│       ├── robotics.py
+│       ├── _data_handling.py
+│       ├── _plotting.py
+│       ├── _preprocessing.py
+│       ├── _robotics.py
 │       └── su_decomp.py
 │
 ├── tests/
