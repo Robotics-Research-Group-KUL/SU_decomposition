@@ -62,13 +62,16 @@ SU_decomposition/
 └── README.md
 ```
 
-### Package modules
+### Package modules (public)
 
 * `sulib.su_decomp` — core SU-decomposition and DUTIR computation.
-* `sulib.robotics` — robotics-related operations for rigid-body trajectories.
-* `sulib.preprocessing` — trajectory preprocessing utilities.
-* `sulib.data_handling` — loading and handling trajectory data.
-* `sulib.plotting` — visualization utilities.
+
+### Package modules (internal)
+
+* `sulib._robotics` — robotics-related operations for rigid-body trajectories.
+* `sulib._preprocessing` — trajectory preprocessing utilities.
+* `sulib._data_handling` — loading and handling trajectory data.
+* `sulib._plotting` — visualization utilities.
 
 ## SU-decomposition
 
