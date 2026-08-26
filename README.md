@@ -1,4 +1,6 @@
 [![CI](https://github.com/arnoverduyn/SU_decomposition/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/arnoverduyn/SU_decomposition/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/sulib.svg)](https://pypi.org/project/sulib/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 # SU Decomposition
 
