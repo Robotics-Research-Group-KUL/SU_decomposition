@@ -76,7 +76,7 @@ def calculate_geom_progress_axis(T, dt, L):
 
     N = T.shape[2]
     s = np.zeros(N)
-    bodytwists = rob.calculate_bodytwist_from_poses(T, dt)
+    bodytwists = rob.poses_to_bodytwists(T, dt)
 
     for k in range(N - 1):
         omega = bodytwists[0:3, k]
