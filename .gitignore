@@ -1,5 +1,7 @@
 
 src/__pycache__/
+build/
+dist/
 *.pyc
 *.svg
 .coverage
