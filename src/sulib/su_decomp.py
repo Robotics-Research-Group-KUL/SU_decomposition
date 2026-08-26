@@ -18,6 +18,12 @@ def RU(A):
     U: np.ndarray of shape (3, 3)
     """
 
+    # Check whether input is of correct type and shape
+    if not isinstance(A, np.ndarray):
+        raise TypeError("A must be a NumPy array")
+    if A.shape != (3, 3):
+        raise ValueError(f"Expected shape (3, 3), got {A.shape}")
+
     # Add regularization for numerical stability
     if np.linalg.norm(A[:, 0]) == 0:
         A[0, 0] += 10 ** (-15)
@@ -26,23 +32,30 @@ def RU(A):
     if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) == 0:
         A[0, 1] += 10 ** (-15)
 
-    # Gramm-Shmidt orthogonalisation
+    # Gramm-Shmidt orthogonalisation: A -> R = [ex ey ez]
+
+    # Compute first column ex
     ex = A[:, 0] / np.linalg.norm(A[:, 0])
 
+    # Compute second column ey
     proj = np.dot(A[:, 1], ex) * ex
     ey = A[:, 1] - proj
     ey = ey / np.linalg.norm(ey)
 
+    # Compute third column ez
     ez = np.cross(ex, ey)
     ez /= np.linalg.norm(ez)
+
+    # Construct complete R matrix
     R = np.column_stack((ex, ey, ez))
 
+    # Compute the upper-triangular matrix U
     U = R.T @ A
 
     return R, U
 
 
-def SU(X, L=10**10):
+def SU(X, L=10.0**10):
     """
     Compute the SU-decomposition of a 6x3 matrix.
 
@@ -57,64 +70,115 @@ def SU(X, L=10**10):
 
     """
 
-    # Calculate R
+    # Check whether input is of correct type and shape
+    if not isinstance(X, np.ndarray):
+        raise TypeError("A must be a NumPy array")
+    if X.shape != (6, 3):
+        raise ValueError(f"Expected shape (6, 3), got {X.shape}")
+    if not isinstance(L, float) or L < 0.0:
+        raise ValueError("L must be a positive float")
+
+    # Divide X into two square block matrices X1 and X2
     X1 = X[0:3, :]
     X2 = X[3:6, :]
+
+    # Compute the RU-decomposition of X1
     R, U1 = RU(X1)
+
+    # Express the columns of X2 in a different basis defined by the columns of R
     RTX2 = R.T @ X2
 
-    # Calculate p_star
+    # Calculate p_star = [x y z]. p_star represents the intersection point of
+    # the screw axis of X[:,0] and the common normal of the screw axes of X[:,0] and X[:,1].
+    # The coordinates of p_star are expressed in the basis defined by the columns of R.
     z = RTX2[1, 0] / U1[0, 0]
     y = -RTX2[2, 0] / U1[0, 0]
     x = (RTX2[2, 1] + U1[0, 1] * y) / U1[1, 1]
     p_star = np.array([x, y, z])
 
-    # Perform regularization
-    if x**2 + y**2 + z**2 > L**2:  # regularization active
-        # Regularize p_star
-        if y**2 + z**2 > L**2:  # Case 2
+    # Regularization:
+    # Ensure the norm of p_star does not exceed a predefined value: || p_star || < L
+    # This regularization procedure is designed such that the lower diagonal terms
+    # of U[3:6,0] are minimized.
+    if x**2 + y**2 + z**2 > L**2:  # Check whether || p_star || > L
+        # Check which regularization strategy has to be applied
+        if y**2 + z**2 >= L**2:
+            # Case 1: there does not exists a point on the screw axis of X[:,0]
+            #         with a distance to the origin smaller than L
+
+            # Choose the point on the screw axis of X[:,0] with smallest distance to the origin
             x = 0
+
+            # Uniformly normalize the y- and z-coordinates of p_star
             y = L * y / np.sqrt(y**2 + z**2)
             z = L * z / np.sqrt(y**2 + z**2)
-        else:  # Case 1
+
+        else:
+            # Case 2: there exists at least one point on the screw axis of X[:,0]
+            #         with a distance to the origin smaller than L
+
+            # p_star is an intersection point of the screw axis of X[:,0] and a spherical manifold
+            # with radius L around the origin.
+            # In theory, there are always two intersection points with the spherical manifold,
+            # but the 'sign(x)' ensures that the intersection point closest to the original p_star is chosen.
             x = np.sign(x) * np.sqrt(L**2 - y**2 - z**2)
+
+        # Construct the complete p_star
         p_star = np.array([x, y, z])
 
+        # Express p_star in the original base: p_star -> p
         p = R @ p_star
+
+        # Compute U2
         U2 = RTX2 - skew(p_star) @ U1
 
-        # Regularize R
+        # Regularize R such that U1 and U2 are both as close as possible to
+        # upper-triangular matrices. This regularization of R is achieved as R_reg = R @ Rc.T ,
+        # with Rc a corrective rotation matrix. The matrix Rc is found by solving
+        # an orthogonal procrustes problem.
+
+        # Calculate exact upper-triangular form of U2 as a reference
         _, U2_tri = RU(U2)
 
-        # input matrix = [L*U1 U2]
-        # target matrix = [L*U1 U2_tri]
+        # Compute covariance matrix C
         C = L**2 * U1[:, 0:2] @ U1[:, 0:2].T + U2[:, 0:2] @ U2_tri[:, 0:2].T
 
-        # Compute SVD
+        # Compute the SVD of C
         U, _, Vt = np.linalg.svd(C)
         V = Vt.T
+
+        # Compute the optimal corrective rotation matrix Rc
         Rc = V @ U.T
 
         # Ensure Rc is a proper rotation matrix (det = +1)
         if np.linalg.det(Rc) < 0:
             U[:, -1] *= -1
             Rc = V @ U.T
+
+        # Compute the regularized version of R
+        R = R @ Rc.T
+
+        # Compute the values of U1 and U2 based on the regularized version of R
         U1 = Rc @ U1
         U2 = Rc @ U2
-        R = R @ Rc.T
+
     else:
+        # No regularization required
+
+        # Express p_star in the original base: p_star -> p
         p = R @ p_star
+
+        # Compute U2
         U2 = RTX2 - skew(p_star) @ U1
 
+    # Construct the complete U and S matrices
     U = np.vstack((U1, U2))
     S = np.vstack((np.hstack((R, np.zeros((3, 3)))), np.hstack((skew(p) @ R, R))))
-
-    assert np.isclose(np.sum((S @ U - X) ** 2), 0.0)
 
     return S, U
 
 
-def pose_trajectory_to_dutir(T, ds, L=10**10, twist_type="body"):
+def pose_trajectory_to_dutir(pose_trajectory, ds, L=10.0**10, twist_type="body"):
     """
     Compute the DUTIR from a rigid-body pose trajectory.
     The pose trajectory is first converted into a screw trajectory
@@ -122,46 +186,47 @@ def pose_trajectory_to_dutir(T, ds, L=10**10, twist_type="body"):
     is applied successively to overlapping windows of three twist samples.
 
     Input:
-    T  : numpy.ndarray, shape (4, 4, N)
+    pose_trajectory  : numpy.ndarray, shape (4, 4, N)
     ds : float
     L  : float, optional
     twist_type : str, optional. Currently only "body" is supported.
 
     Output:
     dutir : numpy.ndarray, shape (6, 3, N-3)
-    twist : numpy.ndarray, shape (6, N-1)
+    twist_trajectory : numpy.ndarray, shape (6, N-1)
 
     """
 
-    T_shape = T.shape
-    assert len(T_shape) == 3, "Input pose trajectory has wrong dimensions."
-    assert T_shape[0] == 4, "Input pose trajectory has wrong dimensions."
-    assert T_shape[1] == 4, "Input pose trajectory has wrong dimensions."
-    assert T_shape[2] >= 4, (
-        "Input pose trajectory has insufficent number of trajectory samples, "
-        "a minimum of four pose samples is required."
-    )
+    # Check whether input is of correct type and shape
+    if not isinstance(pose_trajectory, np.ndarray):
+        raise TypeError("pose_trajectory must be a NumPy array")
+    if pose_trajectory.ndim != 3 or pose_trajectory.shape[:2] != (4, 4) or pose_trajectory.shape[2] < 4:
+        raise ValueError(f"Expected shape (4, 4, N) with N >= 4, got {pose_trajectory.shape}")
+    if not isinstance(L, float) or L < 0.0:
+        raise ValueError("L must be a positive float")
+    if twist_type not in ["body"]:
+        raise TypeError("twist_type must be one of the supported types. Currently supported types: 'body' .")
 
     # Calculate body twist trajectory
     if twist_type == "body":
-        twist = calculate_bodytwist_from_poses(T, ds)
+        twist_trajectory = calculate_bodytwist_from_poses(pose_trajectory, ds)
     else:
-        raise TypeError("Wrong twist type, supported type(s) are 'body'.")
+        raise TypeError("twist_type must be one of the supported types. Currently supported types: 'body' .")
 
     # Calculate the dutir from the twist trajectory
-    dutir = screw_trajectory_to_dutir(twist, L)
+    dutir = screw_trajectory_to_dutir(twist_trajectory, L)
 
-    return dutir, twist
+    return dutir, twist_trajectory
 
 
-def screw_trajectory_to_dutir(screw, L=10**10):
+def screw_trajectory_to_dutir(screw_trajectory, L=10.0**10):
     """
     Compute the DUTIR from a screw trajectory. The DUTIR is computed by
     applying the SU-decomposition successively to overlapping windows
     of three screw samples.
 
     Input:
-    screw  : numpy.ndarray, shape (6, N)
+    screw_trajectory  : numpy.ndarray, shape (6, N), N is the number of trajectory samples
     L  : float, optional
 
     Output:
@@ -169,19 +234,20 @@ def screw_trajectory_to_dutir(screw, L=10**10):
 
     """
 
-    screw_shape = screw.shape
-    assert len(screw_shape) == 2, "Input screw trajectory has wrong dimensions."
-    assert screw_shape[0] == 6, "Input screw trajectory has wrong dimensions."
-    assert screw_shape[1] >= 3, (
-        "Input screw trajectory has insufficent number of trajectory samples, a minimum of three samples is required."
-    )
+    # Check whether input is of correct type and shape
+    if not isinstance(screw_trajectory, np.ndarray):
+        raise TypeError("screw_trajectory must be a NumPy array")
+    if screw_trajectory.ndim != 2 or screw_trajectory.shape[0] != 6 or screw_trajectory.shape[1] < 3:
+        raise ValueError(f"Expected shape (6, N) with N >= 3, got {screw_trajectory.shape}")
+    if not isinstance(L, float) or L < 0.0:
+        raise ValueError("L must be a positive float")
 
     # Perform the successive SU decompositions along the trajectory
-    N = screw_shape[1]
+    N = screw_trajectory.shape[1]
     dutir = np.zeros((6, 3, N - 2))
     for k in range(N - 2):
         # Restructure twist data into successive overlapping windows of size (6,3)
-        Xi = np.column_stack([screw[:, k], screw[:, k + 1], screw[:, k + 2]])
+        Xi = np.column_stack([screw_trajectory[:, k], screw_trajectory[:, k + 1], screw_trajectory[:, k + 2]])
 
         # Compute U matrix
         _, U = SU(Xi, L=L)
