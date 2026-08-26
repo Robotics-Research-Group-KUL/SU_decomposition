@@ -60,9 +60,21 @@ def SU(X, L=10.0**10):
     Compute the SU-decomposition of a 6x3 matrix.
 
     Input:
-    X: np.ndarray of shape (6, 3)
-    L: float, optional
-       Regularization parameter
+    X : np.ndarray of shape (6, 3)
+    L : float, optional
+        Regularization parameter controlling the trade-off between a
+        coordinate-system-invariant representation and a representation
+        with a coordinate-system-dependent translational component.
+
+        The parameter L can be interpreted as a characteristic length scale.
+        When the estimated screw axis of X[:,0] is farther than approximately L from the
+        origin, the screw axis of X[:,0] is constrained to a maximum distance of L
+        and a pure translational component is introduced. This translational component is
+        anchored to the origin of the coordinate system.
+
+        Hence, larger values of L favor a purely coordinate-system-invariant representation,
+        but, for motions that are nearly translational, this may lead to an unintuitive representation
+        with very distant screw axes.
 
     Output:
     S: np.ndarray of shape (6, 6)
@@ -189,6 +201,11 @@ def pose_trajectory_to_dutir(pose_trajectory, ds, L=10.0**10, twist_type="body")
     pose_trajectory  : numpy.ndarray, shape (4, 4, N)
     ds : float
     L  : float, optional
+        Regularization parameter controlling the trade-off between a
+        coordinate-system-invariant representation and a representation
+        with a coordinate-system-dependent translational component.
+        -> see SU()
+
     twist_type : str, optional. Currently only "body" is supported.
 
     Output:
@@ -228,6 +245,10 @@ def screw_trajectory_to_dutir(screw_trajectory, L=10.0**10):
     Input:
     screw_trajectory  : numpy.ndarray, shape (6, N), N is the number of trajectory samples
     L  : float, optional
+        Regularization parameter controlling the trade-off between a
+        coordinate-system-invariant representation and a representation
+        with a coordinate-system-dependent translational component.
+        -> see SU()
 
     Output:
     dutir : numpy.ndarray, shape (6, 3, N-2)
