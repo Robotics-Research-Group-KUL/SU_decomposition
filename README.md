@@ -14,20 +14,23 @@ A preprint is available on [arXiv](https://arxiv.org/abs/2604.10241).
 
 ## Installation (public user)
 
+The project requires **Python 3.10 or newer**.
+
+Install the latest published version from PyPI:
+
 ```bash
 pip install sulib
 ```
 
 ## Installation (developer)
 
-The project requires **Python 3.10 or newer**.
-
-Clone the repository and install the required dependencies:
+Clone the repository and install the required dependencies and sulib package:
 
 ```bash
 git clone https://github.com/arnoverduyn/SU_decomposition.git
 cd SU_decomposition
 pip install -r requirements.txt
+pip install -e .
 ```
 
 The core implementation is located in `src/sulib`.
@@ -48,6 +51,7 @@ SU_decomposition/
 ├── notebooks/
 │
 ├── scripts/
+│   ├── example_public.py
 │   ├── example_SU_calculation_force.py
 │   └── example_SU_calculation_motion.py
 │
