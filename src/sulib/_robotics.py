@@ -187,15 +187,50 @@ def rot2quat(R_all):
     return q_all
 
 
-def calculate_bodytwist_from_poses(T, ds):
+def twist_cross_to_twist(twist_cross):
+
+    skew_omega = twist_cross[:3, :3]
+    twist = np.zeros(6)
+    twist[:3] = extract_vector_from_skew(skew_omega)
+    twist[3:6] = twist_cross[:3, 3]
+
+    return twist
+
+
+def bodytwist(T1, T2, ds):
+
+    twist_cross = logm_pose(inverse_T(T1) @ T2) / ds
+    twist = twist_cross_to_twist(twist_cross)
+
+    return twist
+
+
+def spatialtwist(T1, T2, ds):
+
+    twist_cross = logm_pose(T2 @ inverse_T(T1)) / ds
+    twist = twist_cross_to_twist(twist_cross)
+
+    return twist
+
+
+def poses_to_bodytwists(T, ds):
+
     N = T.shape[2]
     twist = np.zeros((6, N - 1))
 
     for k in range(N - 1):
-        twist_cross = logm_pose(inverse_T(T[:, :, k]) @ T[:, :, k + 1]) / ds
-        skew_omega = twist_cross[:3, :3]
-        twist[:3, k] = extract_vector_from_skew(skew_omega)
-        twist[3:6, k] = twist_cross[:3, 3]
+        twist[:, k] = bodytwist(T[:, :, k], T[:, :, k + 1], ds)
+
+    return twist
+
+
+def poses_to_spatialtwists(T, ds):
+
+    N = T.shape[2]
+    twist = np.zeros((6, N - 1))
+
+    for k in range(N - 1):
+        twist[:, k] = spatialtwist(T[:, :, k], T[:, :, k + 1], ds)
 
     return twist
 

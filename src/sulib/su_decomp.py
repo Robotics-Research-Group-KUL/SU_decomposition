@@ -1,6 +1,6 @@
 import numpy as np
 
-from sulib._robotics import calculate_bodytwist_from_poses, skew
+import sulib._robotics as _rob
 
 
 def RU(A):
@@ -142,7 +142,7 @@ def SU(X, L=10.0**10):
         p = R @ p_star
 
         # Compute U2
-        U2 = RTX2 - skew(p_star) @ U1
+        U2 = RTX2 - _rob.skew(p_star) @ U1
 
         # Regularize R such that U1 and U2 are both as close as possible to
         # upper-triangular matrices. This regularization of R is achieved as R_reg = R @ Rc.T ,
@@ -181,11 +181,11 @@ def SU(X, L=10.0**10):
         p = R @ p_star
 
         # Compute U2
-        U2 = RTX2 - skew(p_star) @ U1
+        U2 = RTX2 - _rob.skew(p_star) @ U1
 
     # Construct the complete U and S matrices
     U = np.vstack((U1, U2))
-    S = np.vstack((np.hstack((R, np.zeros((3, 3)))), np.hstack((skew(p) @ R, R))))
+    S = np.vstack((np.hstack((R, np.zeros((3, 3)))), np.hstack((_rob.skew(p) @ R, R))))
 
     return S, U
 
@@ -221,14 +221,16 @@ def pose_trajectory_to_dutir(pose_trajectory, ds, L=10.0**10, twist_type="body")
         raise ValueError(f"Expected shape (4, 4, N) with N >= 4, got {pose_trajectory.shape}")
     if not isinstance(L, float) or L < 0.0:
         raise ValueError("L must be a positive float")
-    if twist_type not in ["body"]:
-        raise TypeError("twist_type must be one of the supported types. Currently supported types: 'body' .")
+    if twist_type not in ["body", "spatial"]:
+        raise TypeError(
+            "twist_type must be one of the supported types. Currently supported types: 'body' and 'spatial'."
+        )
 
     # Calculate body twist trajectory
     if twist_type == "body":
-        twist_trajectory = calculate_bodytwist_from_poses(pose_trajectory, ds)
-    else:
-        raise TypeError("twist_type must be one of the supported types. Currently supported types: 'body' .")
+        twist_trajectory = _rob.poses_to_bodytwists(pose_trajectory, ds)
+    elif twist_type == "spatial":
+        twist_trajectory = _rob.poses_to_spatialtwists(pose_trajectory, ds)
 
     # Calculate the dutir from the twist trajectory
     dutir = screw_trajectory_to_dutir(twist_trajectory, L)
