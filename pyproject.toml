@@ -1,9 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "sulib"
 version = "1.0.0"
 license-files = ["LICENSE"]
 description = "Python code for SU-decomposition"
+readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+]
 
 [tool.ruff]
 line-length = 120
