@@ -12,7 +12,13 @@ A detailed description of the method is provided in the corresponding paper:
 
 A preprint is available on [arXiv](https://arxiv.org/abs/2604.10241).
 
-## Installation
+## Installation (public user)
+
+```bash
+pip install sulib
+```
+
+## Installation (developer)
 
 The project requires **Python 3.10 or newer**.
 
