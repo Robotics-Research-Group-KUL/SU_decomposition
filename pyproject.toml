@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sulib"
-version = "1.0.1"
+version = "1.0.2"
 license-files = ["LICENSE"]
 description = "Python code for SU-decomposition"
 readme = "README.md"
