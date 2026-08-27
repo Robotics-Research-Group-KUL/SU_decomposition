@@ -88,6 +88,7 @@ SU_decomposition/
 ├── figures/
 │
 ├── notebooks/
+│   ├── notebook.ipynb
 │
 ├── scripts/
 │   ├── example_public.py
