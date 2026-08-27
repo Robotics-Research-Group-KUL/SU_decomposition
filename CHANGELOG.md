@@ -2,6 +2,12 @@
 
 All user-relevant changes to this project are documented in this file.
 
+## [1.0.2] - 2026-08-27
+
+### Changed/hotfix
+
+* Restructured the repository to remove `pandas` as a dependency for users of the public `sulib` package.
+
 ## [1.0.1] - 2026-08-27
 
 ### Added
