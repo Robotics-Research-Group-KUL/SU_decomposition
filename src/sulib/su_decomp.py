@@ -1,6 +1,7 @@
 import numpy as np
+import scipy
 
-import sulib._data_handling as _dh
+import sulib._preprocessing as _pp
 import sulib._robotics as _rob
 
 
@@ -26,7 +27,7 @@ def RU(A):
         raise ValueError(f"Expected shape (3, 3), got {A.shape}")
 
     # Ensure A is pseudo-regular to avoid divide by zero
-    A = _dh.regulate_matrix(A)
+    A = _pp.regulate_matrix(A)
 
     # Compute QR-decomposition
     R, U = np.linalg.qr(A)
@@ -85,7 +86,7 @@ def SU(X, L=10.0**10):
     X2 = X[3:6, :]
 
     # Ensure X1 is pseudo-regular to avoid divide by zero
-    X1 = _dh.regulate_matrix(X1)
+    X1 = _pp.regulate_matrix(X1)
 
     # Compute the RU-decomposition of X1
     R, U1 = RU(X1)
@@ -304,11 +305,66 @@ def generate_synthetic_pose_trajectory(trajectory_type="rotation_3D"):
 
     match trajectory_type:
         case "rotation_1D":
-            T = _dh.generate_precession(T_init, N, time_axis, time_total)
+            T = generate_precession(T_init, N, time_axis, time_total)
         case "rotation_3D":
-            T = _dh.generate_precession(T_init, N, time_axis, time_total)
-            T = _dh.generate_spin(T, N, time_axis, time_total)
+            T = generate_precession(T_init, N, time_axis, time_total)
+            T = generate_spin(T, N, time_axis, time_total)
         case "translation_3D":
-            T = _dh.generate_helical_translation(T_init, N, time_axis, time_total)
+            T = generate_helical_translation(T_init, N, time_axis, time_total)
 
     return T, dt
+
+
+def generate_precession(T, N, time_axis, time_total):
+    """
+    Generate pose trajectory data of a precession motion (pure rotation about fixed Z axis)
+    """
+    for k in range(N):
+        # Apply rotation of the rigid body (precession)
+        ROT = scipy.spatial.transform.Rotation.from_euler(
+            "z", 270 * time_axis[k] / time_total, degrees=True
+        ).as_matrix()
+        T[0:3, 0:3, k] = ROT
+        T[3, 3, k] = 1
+
+        # Displace body frame origin away from the zero vector
+        T_disp = np.eye(4)
+        T_disp[0, 3] = 0.1
+        T[:, :, k] = T[:, :, k] @ T_disp
+
+    return T
+
+
+def generate_spin(T, N, time_axis, time_total):
+    """
+    Generate pose trajectory data of a spin motion (rotation about x-axis of the moving body frame)
+    """
+
+    for k in range(N):
+        # Apply rotation of the rigid body (spin)
+        ROT2 = scipy.spatial.transform.Rotation.from_euler(
+            "x", 270 * time_axis[k] / time_total, degrees=True
+        ).as_matrix()
+        T[0:3, 0:3, k] = T[0:3, 0:3, k] @ ROT2
+
+    return T
+
+
+def generate_helical_translation(T, N, time_axis, time_total):
+    """
+    Generate pose trajectory data of a helical translation
+    """
+
+    r = 0.2  # radius of the circular trajectory
+    p_x = np.array([r * np.cos(np.pi * time_axis / time_total)])
+    p_y = np.array([r * np.sin(np.pi * time_axis / time_total)])
+    p_z = np.array([r * time_axis / time_total])
+    p = np.vstack([p_x, p_y, p_z])
+
+    T = np.zeros((4, 4, N))
+    for k in range(N):
+        T[0:3, 3, k] = p[:, k]
+        T[0:3, 0:3, k] = np.eye(3)
+        T[3, 3, k] = 1
+
+    return T
