@@ -16,12 +16,49 @@ A preprint is available on [arXiv](https://arxiv.org/abs/2604.10241).
 
 ## Installation (public user)
 
-The project requires **Python 3.10 or newer**.
-
 Install the latest published version from PyPI:
 
 ```bash
 pip install sulib
+```
+
+**Example**: compute the DUTIR of a synthetically generated trajectory
+```python
+import numpy
+import sulib
+
+# Generate pose trajectory data of a precession motion
+T, dt = sulib.su_decomp.generate_synthetic_pose_trajectory(trajectory_type="rotation_3D")
+
+# Calculate the DUTIR of this pose trajectory
+dutir, twist_trajectory = sulib.su_decomp.pose_trajectory_to_dutir(T, dt, L=0.3, twist_type="body")
+
+# Print the first three samples of the twist_trajectory as an intermediate result
+print("Three twist samples:")
+print(numpy.round(twist_trajectory[:,:3], 5))
+print(" ")
+
+# Print the first DUTIR sample
+print("First DUTIR sample:")
+print(numpy.round(dutir[:,:,0], 5))
+```
+Output:
+```python
+Three twist samples:
+[[ 2.35575  2.35575  2.35575]
+ [ 0.05608  0.1681   0.27975]
+ [ 2.35575  2.35041  2.33975]
+ [ 0.      -0.      -0.     ]
+ [ 0.23557  0.23504  0.23398]
+ [-0.00561 -0.01681 -0.02798]]
+ 
+First DUTIR sample:
+[[ 3.332    3.33012  3.32446]
+ [-0.       0.11214  0.22409]
+ [ 0.       0.      -0.00377]
+ [ 0.      -0.      -0.     ]
+ [ 0.       0.      -0.     ]
+ [ 0.      -0.      -0.     ]]
 ```
 
 ## Installation (developer)
