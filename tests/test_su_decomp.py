@@ -18,6 +18,20 @@ def test_SU_trivial_reg():
     assert np.isclose(np.sum((S @ U - Xi) ** 2), 0.0)
 
 
+def test_SU_1D_rotation():
+    Xi = np.zeros((6, 3))
+    Xi[0, :] = np.ones(3)
+    S, U = su_decomp.SU(Xi)
+    assert np.isclose(np.sum((S @ U - Xi) ** 2), 0.0)
+
+
+def test_SU_1D_rotation_reg():
+    Xi = np.zeros((6, 3))
+    Xi[0, :] = np.ones(3)
+    S, U = su_decomp.SU(Xi, L=0.3)
+    assert np.isclose(np.sum((S @ U - Xi) ** 2), 0.0)
+
+
 def test_SU_trivial_reg_max():
     Xi = np.zeros((6, 3))
     S, U = su_decomp.SU(Xi, L=0.0)
