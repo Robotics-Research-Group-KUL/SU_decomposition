@@ -4,6 +4,34 @@ from scipy.ndimage import gaussian_filter1d
 import sulib._robotics as rob
 
 
+def regulate_matrix(A):
+    """
+    Add regularization for numerical stability
+    """
+    tol = 10.0 ** (-12)
+    inc = 10.0 ** (-12)
+    if np.linalg.norm(A[:, 0]) < tol:
+        A[0, 0] = add_increment(A[0, 0], inc)
+    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) / np.linalg.norm(A[:, 0]) < tol:
+        A[1, 1] = add_increment(A[1, 1], inc)
+    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) / np.linalg.norm(A[:, 0]) < tol:
+        A[0, 1] = add_increment(A[0, 1], inc)
+
+    return A
+
+
+def add_increment(a, inc):
+    """
+    add a signed increment to the element
+    """
+    if np.abs(a + inc) > np.abs(a - inc):
+        a += inc
+    else:
+        a -= inc
+
+    return a
+
+
 def remove_offset_array(array):
     array -= array[0]
     return array
