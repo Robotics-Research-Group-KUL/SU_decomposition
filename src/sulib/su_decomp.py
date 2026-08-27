@@ -1,5 +1,6 @@
 import numpy as np
 
+import sulib._data_handling as _dh
 import sulib._robotics as _rob
 
 
@@ -24,33 +25,22 @@ def RU(A):
     if A.shape != (3, 3):
         raise ValueError(f"Expected shape (3, 3), got {A.shape}")
 
-    # Add regularization for numerical stability
-    if np.linalg.norm(A[:, 0]) == 0:
-        A[0, 0] += 10 ** (-15)
-    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) == 0:
-        A[1, 1] += 10 ** (-15)
-    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) == 0:
-        A[0, 1] += 10 ** (-15)
+    # Ensure A is pseudo-regular to avoid divide by zero
+    A = _dh.regulate_matrix(A)
 
-    # Gramm-Shmidt orthogonalisation: A -> R = [ex ey ez]
+    # Compute QR-decomposition
+    R, U = np.linalg.qr(A)
 
-    # Compute first column ex
-    ex = A[:, 0] / np.linalg.norm(A[:, 0])
-
-    # Compute second column ey
-    proj = np.dot(A[:, 1], ex) * ex
-    ey = A[:, 1] - proj
-    ey = ey / np.linalg.norm(ey)
-
-    # Compute third column ez
-    ez = np.cross(ex, ey)
-    ez /= np.linalg.norm(ez)
-
-    # Construct complete R matrix
-    R = np.column_stack((ex, ey, ez))
-
-    # Compute the upper-triangular matrix U
-    U = R.T @ A
+    # Apply sign convention
+    if U[0, 0] < 0:
+        R[:, 0] *= -1
+        U[0, :] *= -1
+    if U[1, 1] < 0:
+        R[:, 1] *= -1
+        U[1, :] *= -1
+    if np.linalg.det(R) < 0:
+        R[:, 2] *= -1
+        U[2, :] *= -1
 
     return R, U
 
@@ -94,6 +84,9 @@ def SU(X, L=10.0**10):
     X1 = X[0:3, :]
     X2 = X[3:6, :]
 
+    # Ensure X1 is pseudo-regular to avoid divide by zero
+    X1 = _dh.regulate_matrix(X1)
+
     # Compute the RU-decomposition of X1
     R, U1 = RU(X1)
 
@@ -106,6 +99,7 @@ def SU(X, L=10.0**10):
     z = RTX2[1, 0] / U1[0, 0]
     y = -RTX2[2, 0] / U1[0, 0]
     x = (RTX2[2, 1] + U1[0, 1] * y) / U1[1, 1]
+
     p_star = np.array([x, y, z])
 
     # Regularization:
@@ -206,7 +200,7 @@ def pose_trajectory_to_dutir(pose_trajectory, ds, L=10.0**10, twist_type="body")
         with a coordinate-system-dependent translational component.
         -> see SU()
 
-    twist_type : str, optional. Currently only "body" is supported.
+    twist_type : str, optional. Currently "body" and "spatial" are supported.
 
     Output:
     dutir : numpy.ndarray, shape (6, 3, N-3)
@@ -279,3 +273,42 @@ def screw_trajectory_to_dutir(screw_trajectory, L=10.0**10):
         dutir[:, :, k] = U
 
     return dutir
+
+
+## Generation of synthetic pose trajectories for numerical examples
+
+
+def generate_synthetic_pose_trajectory(trajectory_type="rotation_3D"):
+    """
+    Generate trajectory data of a synthetic pose trajectory.
+
+    Input:
+    trajectory_type : str. Currently 'rotation_1D', 'rotation_3D' and 'translation_3D' are supported.
+
+    Output:
+    T: numpy.ndarray, shape (4, 4, 20), pose trajectory
+    dt: float, timestep
+    """
+
+    if trajectory_type not in ["rotation_1D", "rotation_3D", "translation_3D"]:
+        raise TypeError(
+            "trajectory_type must be one of the supported types. "
+            "Currently supported types: 'rotation_1D', 'rotation_3D' and 'translation_3D'."
+        )
+
+    N = 100  # number of trajectory samples
+    time_total = 2  # seconds
+    time_axis = np.linspace(0, time_total, N)
+    dt = time_total / (N - 1)  # time resolution
+    T_init = np.zeros((4, 4, N))  # initialisation of pose trajectory
+
+    match trajectory_type:
+        case "rotation_1D":
+            T = _dh.generate_precession(T_init, N, time_axis, time_total)
+        case "rotation_3D":
+            T = _dh.generate_precession(T_init, N, time_axis, time_total)
+            T = _dh.generate_spin(T, N, time_axis, time_total)
+        case "translation_3D":
+            T = _dh.generate_helical_translation(T_init, N, time_axis, time_total)
+
+    return T, dt

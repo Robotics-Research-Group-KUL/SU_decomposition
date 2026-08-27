@@ -12,7 +12,7 @@ All user-relevant changes to this project are documented in this file.
 
 ### Bugfixes
 
-- ...
+- in RU(), replaced Gramm-Shmidt orthogonalisation with numpy's more numerically stable QR-decomposition algorithm
 
 ### Added features
 

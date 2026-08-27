@@ -6,7 +6,36 @@ import pandas as pd
 import scipy
 
 import sulib._preprocessing as pp
+import sulib.su_decomp as su
 from sulib._robotics import inverse_T, quat2pose
+
+
+def regulate_matrix(A):
+    """
+    Add regularization for numerical stability
+    """
+    tol = 10.0 ** (-12)
+    inc = 10.0 ** (-12)
+    if np.linalg.norm(A[:, 0]) < tol:
+        A[0, 0] = add_increment(A[0, 0], inc)
+    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) / np.linalg.norm(A[:, 0]) < tol:
+        A[1, 1] = add_increment(A[1, 1], inc)
+    if np.linalg.norm(np.cross(A[:, 0], A[:, 1])) / np.linalg.norm(A[:, 0]) < tol:
+        A[0, 1] = add_increment(A[0, 1], inc)
+
+    return A
+
+
+def add_increment(a, inc):
+    """
+    add a signed increment to the element
+    """
+    if np.abs(a + inc) > np.abs(a - inc):
+        a += inc
+    else:
+        a -= inc
+
+    return a
 
 
 def load_pose_data_from_csv(csv_file):
@@ -75,12 +104,8 @@ def write_ndarray_to_csv_file(ndarray, file_location):
 
 
 def load_demo_trajectory_motion(input_trajectory, path_to_data):
-    if input_trajectory == "helical_translation":
-        T, dt = synthetic_helical_translation()
-    elif input_trajectory == "axis_rotation":
-        T, dt = synthetic_axis_rotation()
-    elif input_trajectory == "precession":
-        T, dt = synthetic_precession()
+    if input_trajectory == "translation_3D" or input_trajectory == "rotation_3D" or input_trajectory == "rotation_1D":
+        T, dt = su.generate_synthetic_pose_trajectory(input_trajectory)
     elif input_trajectory == "pouring":
         T, dt = load_recorded_pouring_motion(path_to_data)
     elif input_trajectory == "contour_following":
@@ -100,98 +125,59 @@ def load_demo_trajectory_force(input_trajectory, path_to_data):
     return T, wrench, N, dt
 
 
-def synthetic_helical_translation():
+def generate_precession(T, N, time_axis, time_total):
     """
-    Generate trajectory data of a helical translation
+    Generate trajectory data of a precession motion (pure rotation about fixed Z axis)
     """
-    N = 30  # number of samples
-    time_total = 2  # seconds
-    time_axis = np.linspace(0, time_total, N)
-    dt = time_total / (N - 1)  # [s]
-
-    r = 0.2  # radius of the circular trajectory
-    p_x = np.array([r * np.cos(np.pi * time_axis / time_total)])
-    p_y = np.array([r * np.sin(np.pi * time_axis / time_total)])
-    p_z = np.array([r * time_axis / time_total])
-    p = np.vstack([p_x, p_y, p_z])
-    p += 1e-5 * np.random.randn(3, N)
-
-    T = np.zeros((4, 4, N))
     for k in range(N):
-        T[0:3, 3, k] = p[:, k]
-        T[0:3, 0:3, k] = scipy.spatial.transform.Rotation.from_euler("xyz", 1e-5 * np.random.randn(3)).as_matrix()
-        T[3, 3, k] = 1
-
-    return T, dt
-
-
-def synthetic_axis_rotation():
-    """
-    Generate trajectory data of a rotation about a fixed axis
-    """
-    N = 60
-    time_total = 4  # seconds
-    time_axis = np.linspace(0, time_total, N)
-    dt = time_total / (N - 1)  # [s]
-
-    T = np.zeros((4, 4, N))
-    for k in range(N):
+        # Apply rotation of the rigid body (precession)
         ROT = scipy.spatial.transform.Rotation.from_euler(
             "z", 270 * time_axis[k] / time_total, degrees=True
         ).as_matrix()
         T[0:3, 0:3, k] = ROT
         T[3, 3, k] = 1
 
-        # displace body frame origin away from the zero vector
-        T_disp = np.eye(4)
-        T_disp[0, 3] = 0.2
-        T[:, :, k] = T[:, :, k] @ T_disp
-
-        # Add artifical noise to avoid exact singularities
-        T[0:3, 3, k] = T[0:3, 3, k] + 1e-5 * np.random.randn(1, 3)
-        T[0:3, 0:3, k] = (
-            T[0:3, 0:3, k] @ scipy.spatial.transform.Rotation.from_euler("xyz", 1e-5 * np.random.randn(3)).as_matrix()
-        )
-
-    return T, dt
-
-
-def synthetic_precession():
-    """
-    Generate trajectory data of a precession motion
-    """
-    N = 60
-    time_total = 4  # seconds
-    time_axis = np.linspace(0, time_total, N)
-    dt = time_total / (N - 1)  # [s]
-
-    T = np.zeros((4, 4, N))
-    for k in range(N):
-        # First rotation
-        ROT1 = scipy.spatial.transform.Rotation.from_euler(
-            "z", 270 * time_axis[k] / time_total, degrees=True
-        ).as_matrix()
-        T[0:3, 0:3, k] = ROT1
-        T[3, 3, k] = 1
-
         # Displace body frame origin away from the zero vector
         T_disp = np.eye(4)
-        T_disp[0, 3] = 0.2
+        T_disp[0, 3] = 0.1
         T[:, :, k] = T[:, :, k] @ T_disp
 
-        # Second rotation -> precession
+    return T
+
+
+def generate_spin(T, N, time_axis, time_total):
+    """
+    Generate trajectory data of a spin motion (rotation about x-axis of the moving body frame)
+    """
+
+    for k in range(N):
+        # Apply rotation of the rigid body (spin)
         ROT2 = scipy.spatial.transform.Rotation.from_euler(
             "x", 270 * time_axis[k] / time_total, degrees=True
         ).as_matrix()
         T[0:3, 0:3, k] = T[0:3, 0:3, k] @ ROT2
 
-        # Add artifical noise to avoid exact singularities
-        T[0:3, 3, k] = T[0:3, 3, k] + 1e-5 * np.random.randn(1, 3)
-        T[0:3, 0:3, k] = (
-            T[0:3, 0:3, k] @ scipy.spatial.transform.Rotation.from_euler("xyz", 1e-5 * np.random.randn(3)).as_matrix()
-        )
+    return T
 
-    return T, dt
+
+def generate_helical_translation(T, N, time_axis, time_total):
+    """
+    Generate trajectory data of a helical translation
+    """
+
+    r = 0.2  # radius of the circular trajectory
+    p_x = np.array([r * np.cos(np.pi * time_axis / time_total)])
+    p_y = np.array([r * np.sin(np.pi * time_axis / time_total)])
+    p_z = np.array([r * time_axis / time_total])
+    p = np.vstack([p_x, p_y, p_z])
+
+    T = np.zeros((4, 4, N))
+    for k in range(N):
+        T[0:3, 3, k] = p[:, k]
+        T[0:3, 0:3, k] = np.eye(3)
+        T[3, 3, k] = 1
+
+    return T
 
 
 def load_recorded_pouring_motion(path_to_data, dt=0.02):
