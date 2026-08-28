@@ -4,5 +4,6 @@ build/
 dist/
 *.pyc
 *.svg
+!figures/figure_readme_sulib.svg
 .coverage
 *.egg-info/
