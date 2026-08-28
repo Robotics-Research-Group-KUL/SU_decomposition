@@ -18,15 +18,15 @@ A preprint is available on [arXiv](https://arxiv.org/abs/2604.10241).
 
 A key feature of the provided code is that it enables the direct computation of the DUTIR from either a screw trajectory or a rigid-body pose trajectory. The main steps of the implementation when starting from a rigid-body pose trajectory are summarized conceptually in the figure below:
 
-<img src="figures/figure_readme_sulib.svg" alt="overview_figure" width="70%">
+<img src="https://raw.githubusercontent.com/arnoverduyn/SU_decomposition/main/figures/figure_readme_sulib.svg" width="70%">
 
 More specifically, the main functionalities of the provided code are:
-* `sulib.su_decomp.SU()`: Compute the SU-decomposition of a *6x3* matrix.
-* `sulib.su_decomp.screw_trajectory_to_dutir()`: Compute the DUTIR from a *6xN* screw trajectory, where *N* represents the number of trajectory samples. The DUTIR is computed by applying the SU-decomposition to successive and overlapping windows of screw triplets.
-* `sulib.su_decomp.pose_trajectory_to_dutir()`: Compute the DUTIR from a *4x4xN* rigid-body pose trajectory, where *N* represents the number of trajectory samples. The pose trajectory is first converted into a screw trajectory, after which `sulib.su_decomp.screw_trajectory_to_dutir()` is applied.
+* `sulib.su_decomp.SU()`: Compute the SU-decomposition of a *6 x 3* matrix.
+* `sulib.su_decomp.screw_trajectory_to_dutir()`: Compute the DUTIR from a *6 x N* screw trajectory, where *N* represents the number of trajectory samples. The DUTIR is computed by applying the SU-decomposition to successive and overlapping windows of screw triplets.
+* `sulib.su_decomp.pose_trajectory_to_dutir()`: Compute the DUTIR from a *4 x 4 x N* rigid-body pose trajectory, where *N* represents the number of trajectory samples. The pose trajectory is first converted into a screw trajectory, after which `sulib.su_decomp.screw_trajectory_to_dutir()` is applied.
   
 ## Duality between motion and force
-The function `sulib.su_decomp.compute_dutir_from_screw_traj()` takes screw trajectories as input. For motion, these screw trajectories correspond to **twist trajectories**. For force/torque data, they correspond to **wrench trajectories**.
+The function `sulib.su_decomp.screw_trajectory_to_dutir()` takes screw trajectories as input. For motion, these screw trajectories correspond to **twist trajectories**. For force/torque data, they correspond to **wrench trajectories**.
 
 Conceptually:
 
@@ -55,7 +55,7 @@ pip install sulib
 
 **Example**: compute the DUTIR of a synthetically generated trajectory
 ```python
-import numpy
+import numpy as np
 import sulib
 
 # Generate pose trajectory data of a precession motion
@@ -66,12 +66,12 @@ dutir, twist_trajectory = sulib.su_decomp.pose_trajectory_to_dutir(T, dt, L=0.3,
 
 # Print the first three samples of the twist_trajectory as an intermediate result
 print("Three twist samples:")
-print(numpy.round(twist_trajectory[:,:3], 5))
+print(np.round(twist_trajectory[:,:3], 5))
 print(" ")
 
 # Print the first DUTIR sample
 print("First DUTIR sample:")
-print(numpy.round(dutir[:,:,0], 5))
+print(np.round(dutir[:,:,0], 5))
 ```
 Output:
 ```python
