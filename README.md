@@ -6,15 +6,40 @@
 
 # SU Decomposition
 
-This repository contains a Python implementation of the **SU-decomposition**, which can be used to compute a coordinate-invariant local representation for rigid-body **motion and force trajectories**. This representation is referred to as the **Dual-Upper-Triangular Invariant Representation (DUTIR)**.
+This repository contains a Python implementation of the **SU-decomposition**, which can be used to compute a **coordinate-invariant local representation** for rigid-body motion trajectories and force trajectories. This representation is referred to as the **Dual-Upper-Triangular Invariant Representation (DUTIR)**.
 
-The implementation is intended for trajectory analysis, identification, and generalization across coordinate systems. It provides tools for preprocessing trajectory data, computing screw trajectories, applying the SU-decomposition, and visualizing the resulting representations.
-
-A detailed description of the method is provided in the corresponding paper:
+The implementation is intended for trajectory analysis, identification, and generalization across coordinate systems. A detailed description of the method is provided in the corresponding paper:
 
 > **A Coordinate-Invariant Local Representation of Motion and Force Trajectories for Identification and Generalization Across Coordinate Systems**
 
 A preprint is available on [arXiv](https://arxiv.org/abs/2604.10241).
+
+## Code highlights
+
+The main functionalities are:
+* `sulib.su_decomp.SU()`: Compute the SU-decomposition of a *6x3* matrix.
+* `sulib.su_decomp.screw_trajectory_to_dutir()`: Compute the DUTIR from a *6xN* screw trajectory, where *N* represents the number of trajectory samples. The DUTIR is computed by applying the SU-decomposition to successive and overlapping windows of screw triplets.
+* `sulib.su_decomp.pose_trajectory_to_dutir()`: Compute the DUTIR from a *4x4xN* rigid-body pose trajectory, where *N* represents the number of trajectory samples. The pose trajectory is first converted into a screw trajectory, after which `sulib.su_decomp.screw_trajectory_to_dutir()` is applied.
+  
+## Duality between motion and force
+The function `sulib.su_decomp.compute_dutir_from_screw_traj()` takes screw trajectories as input. For motion, these screw trajectories correspond to **twist trajectories**. For force/torque data, they correspond to **wrench trajectories**.
+
+Conceptually:
+
+```text
+Rigid-body pose trajectory
+          │
+          ▼
+    Twist trajectory                         Wrench trajectory
+          │                                         │
+          ▼                                         ▼
+   SU-decomposition                          SU-decomposition
+          │                                         │
+          ▼                                         ▼
+DUTIR of rigid-body motion               DUTIR of force/torque data
+```
+
+Hence, the functions `sulib.su_decomp.screw_trajectory_to_dutir()` and `sulib.su_decomp.SU()` can be applied directly to either twist or wrench data:
 
 ## Installation (public user)
 
@@ -124,29 +149,6 @@ SU_decomposition/
 * `sulib._preprocessing` — trajectory preprocessing utilities.
 * `sulib._data_handling` — loading and handling trajectory data.
 * `sulib._plotting` — visualization utilities.
-
-## SU-decomposition
-
-The function `sulib.su_decomp.compute_dutir_from_screw_traj()` takes screw trajectories as input. For motion, these screw trajectories correspond to **twist trajectories**. For force/torque data, they correspond to **wrench trajectories**.
-
-For motion data provided as a pose trajectory, `sulib.su_decomp.compute_dutir_from_pose_traj()` first computes the corresponding twist trajectory and then computes the DUTIR from this twist trajectory.
-
-Conceptually:
-
-```text
-Rigid-body pose trajectory
-          │
-          ▼
-    Twist trajectory                         Wrench trajectory
-          │                                         │
-          ▼                                         ▼
-   SU-decomposition                          SU-decomposition
-          │                                         │
-          ▼                                         ▼
-DUTIR of rigid-body motion               DUTIR of force/torque data
-```
-
-More generally, the SU-decomposition can be applied directly to either a twist or wrench trajectory:
 
 ## Examples
 
