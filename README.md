@@ -6,7 +6,7 @@
 
 # SU Decomposition
 
-This repository contains a Python implementation of the **SU-decomposition**, which can be used to compute a **coordinate-invariant local representation** for rigid-body motion trajectories and force trajectories. This representation is referred to as the **Dual-Upper-Triangular Invariant Representation (DUTIR)**.
+This repository contains a Python implementation of the **SU-decomposition**, which can be used to compute a **coordinate-invariant local representation** for rigid-body motion trajectories and force trajectories. This representation is referred to as the **Dual-Upper-Triangular Invariant Representation (DUTIR)**. The accompanying Python package is called the SU-decomposition library, or `sulib`.
 
 The implementation is intended for trajectory analysis, identification, and generalization across coordinate systems. A detailed description of the method is provided in the corresponding paper:
 
@@ -14,9 +14,13 @@ The implementation is intended for trajectory analysis, identification, and gene
 
 A preprint is available on [arXiv](https://arxiv.org/abs/2604.10241).
 
-## Code highlights
+## Highlights and conceptual overview figure
 
-The main functionalities are:
+A key feature of the provided code is that it enables the direct computation of the DUTIR from either a screw trajectory or a rigid-body pose trajectory. The main steps of the implementation when starting from a rigid-body pose trajectory are summarized conceptually in the figure below:
+
+<img src="figures/figure_readme_sulib.svg" alt="overview_figure" width="70%">
+
+More specifically, the main functionalities of the provided code are:
 * `sulib.su_decomp.SU()`: Compute the SU-decomposition of a *6x3* matrix.
 * `sulib.su_decomp.screw_trajectory_to_dutir()`: Compute the DUTIR from a *6xN* screw trajectory, where *N* represents the number of trajectory samples. The DUTIR is computed by applying the SU-decomposition to successive and overlapping windows of screw triplets.
 * `sulib.su_decomp.pose_trajectory_to_dutir()`: Compute the DUTIR from a *4x4xN* rigid-body pose trajectory, where *N* represents the number of trajectory samples. The pose trajectory is first converted into a screw trajectory, after which `sulib.su_decomp.screw_trajectory_to_dutir()` is applied.
