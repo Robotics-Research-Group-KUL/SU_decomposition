@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 
-import sulib._robotics as rob
+import sulib._robotics as _rob
 
 
 def regulate_matrix(A):
@@ -60,7 +60,7 @@ def preprocess_pose_data(T, t, dt):
     t0_equi, t0 = preprocess_time_axis(t, stepsize=dt)
 
     # Interpolate pose data to equidistant stepsize
-    T = rob.interpT(t0, T, t0_equi)
+    T = _rob.interpT(t0, T, t0_equi)
 
     return T
 
@@ -104,7 +104,7 @@ def calculate_geom_progress_axis(T, dt, L):
 
     N = T.shape[2]
     s = np.zeros(N)
-    bodytwists = rob.poses_to_bodytwists(T, dt)
+    bodytwists = _rob.poses_to_bodytwists(T, dt)
 
     for k in range(N - 1):
         omega = bodytwists[0:3, k]

@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sulib"
-version = "1.0.2"
+version = "1.0.3"
 license-files = ["LICENSE"]
-description = "Python library for SU-decomposition and related numerical algorithms."
+description = "Python library for the SU-decomposition algorithm, the Dual-Upper-Triangular Invariant Representation (DUTIR), and related numerical algorithms."
 readme = "README.md"
 authors = [
 { name = "Arno Verduyn" },
