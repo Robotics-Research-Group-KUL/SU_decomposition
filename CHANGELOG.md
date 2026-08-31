@@ -2,6 +2,14 @@
 
 All user-relevant changes to this project are documented in this file.
 
+## [1.0.3] - 2026-08-31
+
+### Changed/hotfix
+
+* Restructured the module `su_decomp` to `_core`.
+* Exposed the following functions from `_core` through the package's public API in `__init__.py`: `RU`, `SU`, `generate_synthetic_pose_trajectory`, `pose_trajectory_to_dutir`, `screw_trajectory_to_dutir`.
+* Updated project README, description, and other metadata.
+
 ## [1.0.2] - 2026-08-27
 
 ### Changed/hotfix

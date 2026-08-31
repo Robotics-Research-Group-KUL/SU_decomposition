@@ -21,12 +21,12 @@ A key feature of the provided code is that it enables the direct computation of 
 <img src="https://raw.githubusercontent.com/arnoverduyn/SU_decomposition/main/figures/figure_readme_sulib.svg" width="70%">
 
 More specifically, the main functionalities of the provided code are:
-* `sulib.su_decomp.SU()`: Compute the SU-decomposition of a *6 x 3* matrix.
-* `sulib.su_decomp.screw_trajectory_to_dutir()`: Compute the DUTIR from a *6 x N* screw trajectory, where *N* represents the number of trajectory samples. The DUTIR is computed by applying the SU-decomposition to successive and overlapping windows of screw triplets.
-* `sulib.su_decomp.pose_trajectory_to_dutir()`: Compute the DUTIR from a *4 x 4 x N* rigid-body pose trajectory, where *N* represents the number of trajectory samples. The pose trajectory is first converted into a screw trajectory, after which `sulib.su_decomp.screw_trajectory_to_dutir()` is applied.
+* `sulib.SU()`: Compute the SU-decomposition of a *6 x 3* matrix.
+* `sulib.screw_trajectory_to_dutir()`: Compute the DUTIR from a *6 x N* screw trajectory, where *N* represents the number of trajectory samples. The DUTIR is computed by applying the SU-decomposition to successive and overlapping windows of screw triplets.
+* `sulib.pose_trajectory_to_dutir()`: Compute the DUTIR from a *4 x 4 x N* rigid-body pose trajectory, where *N* represents the number of trajectory samples. The pose trajectory is first converted into a screw trajectory, after which `sulib.screw_trajectory_to_dutir()` is applied.
   
 ## Duality between motion and force
-The function `sulib.su_decomp.screw_trajectory_to_dutir()` takes screw trajectories as input. For motion, these screw trajectories correspond to **twist trajectories**. For force/torque data, they correspond to **wrench trajectories**.
+The function `sulib.screw_trajectory_to_dutir()` takes screw trajectories as input. For motion, these screw trajectories correspond to **twist trajectories**. For force/torque data, they correspond to **wrench trajectories**.
 
 Conceptually:
 
@@ -43,7 +43,7 @@ Rigid-body pose trajectory
 DUTIR of rigid-body motion               DUTIR of force/torque data
 ```
 
-Hence, the functions `sulib.su_decomp.screw_trajectory_to_dutir()` and `sulib.su_decomp.SU()` can be applied directly to either twist or wrench data:
+Hence, the functions `sulib.screw_trajectory_to_dutir()` and `sulib.SU()` can be applied directly to either twist or wrench data:
 
 ## Installation (public user)
 
@@ -53,25 +53,30 @@ Install the latest published version from PyPI:
 pip install sulib
 ```
 
-**Example**: compute the DUTIR of a synthetically generated trajectory
+### Public functions (exposed via `__init__`)
+
+* `sulib.RU`, `sulib.SU`, `sulib.pose_trajectory_to_dutir`, `sulib.screw_trajectory_to_dutir`, and `sulib.generate_synthetic_pose_trajectory`.
+
+## Example: computation of the DUTIR 
+
 ```python
 import numpy as np
 import sulib
 
 # Generate pose trajectory data of a precession motion
-T, dt = sulib.su_decomp.generate_synthetic_pose_trajectory(trajectory_type="rotation_3D")
+T, dt = sulib.generate_synthetic_pose_trajectory(trajectory_type="rotation_3D")
 
 # Calculate the DUTIR of this pose trajectory
-dutir, twist_trajectory = sulib.su_decomp.pose_trajectory_to_dutir(T, dt, L=0.3, twist_type="body")
+dutir, twist_trajectory = sulib.pose_trajectory_to_dutir(T, dt, L=0.3, twist_type="body")
 
 # Print the first three samples of the twist_trajectory as an intermediate result
 print("Three twist samples:")
-print(np.round(twist_trajectory[:,:3], 5))
+print(np.round(twist_trajectory[:, :3], 5))
 print(" ")
 
 # Print the first DUTIR sample
 print("First DUTIR sample:")
-print(np.round(dutir[:,:,0], 5))
+print(np.round(dutir[:, :, 0], 5))
 ```
 Output:
 ```python
@@ -123,8 +128,8 @@ SU_decomposition/
 │
 ├── scripts/
 │   ├── example_public.py
-│   ├── example_SU_calculation_force.py
-│   └── example_SU_calculation_motion.py
+│   ├── example_developer_dutir_force.py
+│   └── example_developer_dutir_motion.py
 │
 ├── src/
 │   └── sulib/
@@ -132,20 +137,17 @@ SU_decomposition/
 │       ├── _plotting.py
 │       ├── _preprocessing.py
 │       ├── _robotics.py
-│       └── su_decomp.py
+│       └── _core.py
 │
 ├── tests/
-│   └── test_su_decomp.py
+│   └── test_core.py
 │
 ├── pyproject.toml
 ├── requirements.txt
 ├── LICENSE
+├── CHANGELOG.md
 └── README.md
 ```
-
-### Package modules (public)
-
-* `sulib.su_decomp` — core SU-decomposition and DUTIR computation.
 
 ### Package modules (internal)
 
@@ -153,8 +155,9 @@ SU_decomposition/
 * `sulib._preprocessing` — trajectory preprocessing utilities.
 * `sulib._data_handling` — loading and handling trajectory data.
 * `sulib._plotting` — visualization utilities.
+* `sulib._core`— core functionalities of the `sulib` package
 
-## Examples
+## Extra examples
 
 The `notebooks/` directory contains numerical examples and demonstrations.
 

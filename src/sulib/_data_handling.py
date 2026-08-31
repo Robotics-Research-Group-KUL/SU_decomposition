@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import scipy
 
-import sulib._preprocessing as pp
-import sulib.su_decomp as su
+import sulib._core as _core
+import sulib._preprocessing as _pp
 from sulib._robotics import inverse_T, quat2pose
 
 
@@ -77,7 +77,7 @@ def write_ndarray_to_csv_file(ndarray, file_location):
 
 def load_demo_trajectory_motion(input_trajectory, path_to_data):
     if input_trajectory == "translation_3D" or input_trajectory == "rotation_3D" or input_trajectory == "rotation_1D":
-        T, dt = su.generate_synthetic_pose_trajectory(input_trajectory)
+        T, dt = _core.generate_synthetic_pose_trajectory(input_trajectory)
     elif input_trajectory == "pouring":
         T, dt = load_recorded_pouring_motion(path_to_data)
     elif input_trajectory == "contour_following":
@@ -101,7 +101,7 @@ def load_recorded_pouring_motion(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/pouring/Trial1_coffee_kettle_ref_top.csv"
     T, t = load_pose_data_from_csv(data_file)
-    T = pp.preprocess_pose_data(T, t, dt)
+    T = _pp.preprocess_pose_data(T, t, dt)
 
     # Extract first half of the trajectory
     N = T.shape[2]
@@ -115,7 +115,7 @@ def load_recorded_contour_following_motion(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
-    T = pp.preprocess_pose_data(T, t, dt)
+    T = _pp.preprocess_pose_data(T, t, dt)
 
     return T, dt
 
@@ -125,8 +125,8 @@ def load_recorded_contour_following_force(path_to_data, dt=0.02):
     data_file = rf"{path_to_data}/demos/contour_following/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     wrench, _ = load_wrench_data_from_dat(data_file)
-    T = pp.preprocess_pose_data(T, t, dt)
-    wrench = pp.preprocess_wrench_data(wrench, t, dt)
+    T = _pp.preprocess_pose_data(T, t, dt)
+    wrench = _pp.preprocess_wrench_data(wrench, t, dt)
 
     return T, wrench, dt
 
@@ -135,7 +135,7 @@ def load_recorded_peg_on_hole_alignment_motion(path_to_data, dt=0.02):
 
     data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
-    T = pp.preprocess_pose_data(T, t, dt)
+    T = _pp.preprocess_pose_data(T, t, dt)
 
     return T, dt
 
@@ -145,8 +145,8 @@ def load_recorded_peg_on_hole_alignment_force(path_to_data, dt=0.02):
     data_file = rf"{path_to_data}/demos/peg_on_hole_alignment/data_demo_a_1.dat"
     T, t = load_pose_data_from_dat(data_file)
     wrench, t = load_wrench_data_from_dat(data_file)
-    T = pp.preprocess_pose_data(T, t, dt)
-    wrench = pp.preprocess_wrench_data(wrench, t, dt)
+    T = _pp.preprocess_pose_data(T, t, dt)
+    wrench = _pp.preprocess_wrench_data(wrench, t, dt)
 
     return T, wrench, dt
 
