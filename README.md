@@ -53,9 +53,9 @@ Install the latest published version from PyPI:
 pip install sulib
 ```
 
-### Public functions (exposed via `__init__`)
+## Public functions (exposed via `__init__`)
 
-* `sulib.RU`, `sulib.SU`, `sulib.pose_trajectory_to_dutir`, `sulib.screw_trajectory_to_dutir`, and `sulib.generate_synthetic_pose_trajectory`.
+`sulib.RU`, `sulib.SU`, `sulib.pose_trajectory_to_dutir`, `sulib.screw_trajectory_to_dutir`, and `sulib.generate_synthetic_pose_trajectory`.
 
 ## Example: computation of the DUTIR 
 
